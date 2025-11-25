@@ -5,9 +5,9 @@ import colors from "./theme";
 
 export default function Index() {
   const router = useRouter();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
-  const [fighters, setFighters] = useState<string[]>([]);
+  const [fighters, setFighters] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +18,8 @@ export default function Index() {
         setLoading(true);
         const res = await fetch('http://qubis.pl:4000/api/firefighters');
         const data = await res.json();
-        console.log('GET /api/firefighters response:', data);
         if (!mounted) return;
-        // data expected to be array of { id, name, created_at }
-        setFighters(Array.isArray(data) ? data.map((d: any) => d.name) : []);
+        setFighters(Array.isArray(data) ? data.map((d: any) => ({ id: d.id, name: d.name })) : []);
         setError(null);
       } catch (err: any) {
         console.log('GET API error:', err);
@@ -40,19 +38,7 @@ export default function Index() {
 
   async function onEnter() {
     if (!selected) return;
-    try {
-      const res = await fetch('http://qubis.pl:4000/api/firefighters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: selected }),
-      });
-      const data = await res.json();
-      console.log('POST /api/firefighters response:', data);
-    } catch (err) {
-      console.log('POST API error:', err);
-    }
-
-    router.push({ pathname: ("/home" as any), params: { firefighter: selected } });
+    router.push({ pathname: ("/home" as any), params: { firefighterId: String(selected) } });
   }
 
   return (
@@ -64,7 +50,7 @@ export default function Index() {
         onPress={() => setOpen((v) => !v)}
         accessibilityLabel="Open firefighter list"
       >
-        <Text>{selected ?? (loading ? 'Loading...' : 'Choose...')}</Text>
+        <Text>{selected ? (fighters.find((f) => f.id === selected)?.name ?? 'Selected') : (loading ? 'Loading...' : 'Choose...')}</Text>
       </TouchableOpacity>
 
       {open && (
@@ -76,14 +62,14 @@ export default function Index() {
           )}
           {!loading && !error && fighters.map((f) => (
             <TouchableOpacity
-              key={f}
+              key={String(f.id)}
               style={styles.item}
               onPress={() => {
-                setSelected(f);
+                setSelected(f.id);
                 setOpen(false);
               }}
             >
-              <Text>{f}</Text>
+              <Text>{f.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
