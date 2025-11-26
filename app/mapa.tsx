@@ -1,9 +1,11 @@
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 import colors from "./theme";
 
 const API_URL = 'http://qubis.pl:4000/api/location/all';
+const FIREFIGHTERS_URL = 'http://qubis.pl:4000/api/firefighters';
 const POLL_INTERVAL_MS = 5000; // 5 seconds
 
 interface FirefighterLocation {
@@ -14,7 +16,13 @@ interface FirefighterLocation {
   updated_at: string;
 }
 
-const leafletHTML = `
+interface Firefighter {
+  id: number;
+  name: string;
+}
+
+function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 21.0122) {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,16 +36,17 @@ const leafletHTML = `
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([52.2297, 21.0122], 13);
+    const map = L.map('map').setView([${initialLat}, ${initialLng}], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
     const markers = {};
+    let hasZoomedToUser = false;
 
     // Function to add/update a firefighter marker
-    function updateFirefighterMarker(id, lat, lng, label) {
+    function updateFirefighterMarker(id, lat, lng, firefighterName, isCurrentUser) {
       const key = 'firefighter_' + id;
       if (markers[key]) {
         map.removeLayer(markers[key]);
@@ -57,9 +66,14 @@ const leafletHTML = `
       });
       
       const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
-      const popupText = label || ('Strażak #' + id);
-      marker.bindPopup(popupText);
+      marker.bindPopup(firefighterName);
       markers[key] = marker;
+      
+      // Auto-zoom to current user on first load
+      if (isCurrentUser && !hasZoomedToUser) {
+        hasZoomedToUser = true;
+        map.setView([lat, lng], 16);
+      }
     }
 
     map.on('click', function(e) {
@@ -93,7 +107,8 @@ const leafletHTML = `
         } else if (msg.type === 'updateFirefighters') {
           // Update all firefighter locations
           msg.locations.forEach(function(loc) {
-            updateFirefighterMarker(loc.firefighter_id, loc.lat, loc.lng, loc.label);
+            var isCurrentUser = msg.currentFirefighterId && loc.firefighter_id === msg.currentFirefighterId;
+            updateFirefighterMarker(loc.firefighter_id, loc.lat, loc.lng, loc.firefighterName, isCurrentUser);
           });
         }
       } catch(e) {}
@@ -102,12 +117,36 @@ const leafletHTML = `
 </body>
 </html>
 `;
+}
 
 export default function Mapa() {
   const webViewRef = useRef<WebView>(null);
   const [editing, setEditing] = useState<{ lat: number; lng: number } | null>(null);
   const [tempLabel, setTempLabel] = useState("");
   const pollIntervalRef = useRef<number | null>(null);
+  const { firefighterId } = useLocalSearchParams() as { firefighterId?: string };
+  const [initialLocation, setInitialLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isWebViewReady, setIsWebViewReady] = useState(false);
+  const pendingLocationsRef = useRef<FirefighterLocation[] | null>(null);
+  const [firefighters, setFirefighters] = useState<Firefighter[]>([]);
+
+  // Fetch firefighters list once
+  useEffect(() => {
+    let mounted = true;
+    async function fetchFirefighters() {
+      try {
+        const res = await fetch(FIREFIGHTERS_URL);
+        const data = await res.json();
+        if (mounted) {
+          setFirefighters(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        // Ignore errors
+      }
+    }
+    fetchFirefighters();
+    return () => { mounted = false; };
+  }, []);
 
   // Fetch and update firefighter locations
   useEffect(() => {
@@ -119,22 +158,47 @@ export default function Mapa() {
         const res = await fetch(API_URL);
         const locations: FirefighterLocation[] = await res.json();
         
-        if (!mounted || !webViewRef.current) return;
+        if (!mounted) return;
 
+        const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
+        
+        // Ustaw początkową lokalizację na zalogowanego strażaka
+        if (!initialLocation && currentId) {
+          const userLocation = locations.find(loc => loc.firefighter_id === currentId);
+          if (userLocation) {
+            setInitialLocation({ lat: userLocation.lat, lng: userLocation.lng });
+            // Zapisz lokalizacje do wysłania po załadowaniu WebView
+            pendingLocationsRef.current = locations;
+            return; // Poczekaj na przeładowanie WebView
+          }
+        }
+        
+        if (!webViewRef.current) return;
+        
+        // Połącz lokalizacje z nazwami strażaków
+        const locationsWithNames = locations.map(loc => {
+          const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
+          return {
+            ...loc,
+            firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`
+          };
+        });
+        
         const message = JSON.stringify({
           type: 'updateFirefighters',
-          locations: locations,
+          locations: locationsWithNames,
+          currentFirefighterId: currentId,
         });
+        
         webViewRef.current.postMessage(message);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        // Ignore errors
       }
     }
 
     // Fetch immediately
     fetchLocations();
 
-    // Then poll every POLL_INTERVAL_MS
     pollIntervalRef.current = setInterval(fetchLocations, POLL_INTERVAL_MS) as unknown as number;
 
     return () => {
@@ -144,7 +208,32 @@ export default function Mapa() {
         pollIntervalRef.current = null;
       }
     };
-  }, []);
+  }, [firefighterId]);
+
+  // Wyślij dane do mapy gdy WebView jest gotowy
+  useEffect(() => {
+    if (isWebViewReady && pendingLocationsRef.current && webViewRef.current) {
+      const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
+      
+      // Połącz lokalizacje z nazwami strażaków
+      const locationsWithNames = pendingLocationsRef.current.map(loc => {
+        const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
+        return {
+          ...loc,
+          firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`
+        };
+      });
+      
+      const message = JSON.stringify({
+        type: 'updateFirefighters',
+        locations: locationsWithNames,
+        currentFirefighterId: currentId,
+      });
+      
+      webViewRef.current.postMessage(message);
+      pendingLocationsRef.current = null; // Wyczyść pending
+    }
+  }, [isWebViewReady, firefighterId, firefighters]);
 
   function onMessage(event: any) {
     try {
@@ -176,9 +265,11 @@ export default function Mapa() {
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
-        source={{ html: leafletHTML }}
+        source={{ html: generateLeafletHTML(initialLocation?.lat, initialLocation?.lng) }}
+        key={initialLocation ? 'with-location' : 'default'} // Force reload when location is set
         style={styles.map}
         onMessage={onMessage}
+        onLoadEnd={() => setIsWebViewReady(true)}
         javaScriptEnabled
         domStorageEnabled
       />

@@ -40,9 +40,7 @@ export default function Home() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Home Page</Text>
       <Text style={styles.subtitle}>Selected: {firefighterName ?? firefighterId ?? "None"}</Text>
-// pasuje pewnie dodac tutaj cos ze naczelnik lub prezes lub konserwator ma opcje dodania lub podgladu wyposazenia samochodu, przegladow sprzetu itp
       <View style={styles.grid}>
         {[
           { key: "wyposazenie", label: "Wyposażenie", icon: "🧰" },
@@ -51,7 +49,7 @@ export default function Home() {
           { key: "raporty", label: "Raporty", icon: "📄" },
           { key: "powiadomienia", label: "Powiadomienia", icon: "🔔" },
           { key: "ustawienia", label: "Ustawienia", icon: "⚙️" },
-          { key: "Pojazdy i sprzęt", label: "Pojazdy i Sprzęt", icon: "🚒" },
+          { key: "Pojazdy i sprzęt", label: "Pojazdy i sprzęt", icon: "🚒" },
         ].map((tile) => (
           <TouchableOpacity
             key={tile.key}

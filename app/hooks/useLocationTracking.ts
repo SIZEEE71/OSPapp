@@ -45,8 +45,17 @@ export function useLocationTracking({ firefighterId, enabled = true }: LocationT
       if (!isEnabledRef.current || !mounted) return;
 
       try {
+        // Check if location services are enabled
+        const isEnabled = await Location.hasServicesEnabledAsync();
+        if (!isEnabled) {
+          console.warn('Location services are disabled. Please enable GPS on your device/emulator.');
+          return;
+        }
+
+        // Try to get location with timeout and fallback options
         const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.Low, // Use Low for emulator compatibility
+          timeInterval: 5000, // Maximum wait time
         });
 
         const { latitude, longitude } = location.coords;
@@ -62,9 +71,13 @@ export function useLocationTracking({ firefighterId, enabled = true }: LocationT
           }),
         });
 
-        console.log(`Location sent: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-      } catch (error) {
-        console.error('Error sending location:', error);
+      } catch (error: any) {
+        console.error('❌ Error sending location:', error.message || error);
+        
+        // Provide helpful debugging info
+        if (error.message?.includes('unavailable')) {
+          console.warn('💡 Emulator fix: Open emulator settings (... button) → Location → Set location manually');
+        }
       }
     }
 

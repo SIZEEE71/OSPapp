@@ -30,5 +30,5 @@
 - wprowadzono route do wyposazenia oraz powrot
 ### TODO
 - dodanie całego wyposazenia dla strazakow
-
+- pasuje pewnie dodac tutaj cos ze naczelnik lub prezes lub konserwator ma opcje dodania lub podgladu wyposazenia samochodu, przegladow sprzetu itp
 
