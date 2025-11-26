@@ -9,6 +9,26 @@ interface PhoneNumber {
 
 const API_URL = 'http://qubis.pl:4000/api/firefighters/phone';
 
+function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  
+  let normalized = phone.replace(/[^\d+]/g, '');
+  
+  if (normalized.startsWith('+')) {
+    normalized = normalized.substring(1);
+  }
+  
+  if (normalized.startsWith('48')) {
+    normalized = normalized.substring(2);
+  }
+  
+  if (normalized.startsWith('0')) {
+    normalized = normalized.substring(1);
+  }
+  
+  return normalized;
+}
+
 // Request READ_PHONE_STATE permission on Android
 async function requestPhoneStatePermission() {
   if (Platform.OS !== 'android') {
@@ -27,7 +47,6 @@ async function requestPhoneStatePermission() {
       }
     );
     
-    console.log('Permission result:', granted);
     return granted === PermissionsAndroid.RESULTS.GRANTED;
   } catch (err) {
     console.warn('Permission error:', err);
@@ -57,7 +76,6 @@ export function useSimPhoneNumber() {
         }
 
         // Request permission first
-        console.log('Requesting READ_PHONE_STATE permission...');
         const hasPermission = await requestPhoneStatePermission();
         
         if (!hasPermission) {
@@ -66,14 +84,11 @@ export function useSimPhoneNumber() {
           return;
         }
 
-        console.log('Permission granted, fetching SIM info...');
-
         // Import native module
         const SimCardsManager = require('react-native-sim-cards-manager').default;
 
         // Get SIM cards
         const simCards = await SimCardsManager.getSimCards();
-        console.log('SIM Cards found:', simCards);
 
         if (!simCards || simCards.length === 0) {
           setError('No SIM card found');
@@ -83,7 +98,6 @@ export function useSimPhoneNumber() {
 
         const firstSim = simCards[0];
         const phone = firstSim.phoneNumber;
-        console.log('Phone number from SIM:', phone);
 
         if (!mounted) return;
 
@@ -92,20 +106,18 @@ export function useSimPhoneNumber() {
 
         // Try to find firefighter by phone number
         try {
-          const url = `${API_URL}/${encodeURIComponent(phone)}`;
-          console.log('Fetching firefighter from:', url);
+          const normalized = normalizePhoneNumber(phone);
+          
+          const url = `${API_URL}/${encodeURIComponent(normalized)}`;
           const response = await fetch(url);
           if (response.ok) {
             const firefighter = await response.json();
-            console.log('Found firefighter:', firefighter);
             if (mounted) {
               setFirefighterId(firefighter.id);
             }
-          } else {
-            console.log('Firefighter not found (HTTP', response.status + ')');
           }
         } catch (err) {
-          console.log('Firefighter lookup failed:', err);
+          // Firefighter lookup failed - silently continue
         }
 
         setLoading(false);
