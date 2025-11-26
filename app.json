@@ -23,7 +23,10 @@
       "package": "com.size7110.OSP",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "READ_PHONE_STATE",
+        "FOREGROUND_SERVICE",
+        "READ_PHONE_NUMBERS"
       ]
     },
     "web": {

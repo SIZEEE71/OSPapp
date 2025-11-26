@@ -50,6 +50,7 @@ export default function Home() {
           { key: "powiadomienia", label: "Powiadomienia", icon: "🔔" },
           { key: "ustawienia", label: "Ustawienia", icon: "⚙️" },
           { key: "Pojazdy i sprzęt", label: "Pojazdy i sprzęt", icon: "🚒" },
+          { key: "strażacy", label: "Strażacy", icon: "👩‍🚒" },
         ].map((tile) => (
           <TouchableOpacity
             key={tile.key}

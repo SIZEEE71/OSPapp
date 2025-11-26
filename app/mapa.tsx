@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import colors from "./theme";
 
@@ -21,7 +21,7 @@ interface Firefighter {
   name: string;
 }
 
-function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 21.0122) {
+function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number = 20.627574) {
   return `
 <!DOCTYPE html>
 <html>
@@ -30,9 +30,111 @@ function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
+    
+    #searchButton {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 26px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    #searchButton:hover {
+      background: #f0f0f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transform: scale(1.1);
+    }
+
+    #searchBox { 
+      position: absolute; 
+      top: 100px; 
+      right: 0px; 
+      z-index: 1000; 
+      background: white; 
+      padding: 15px; 
+      border-radius: 8px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      border: 2px solid #007bff;
+    }
+
+    #searchBox.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #searchBox input { 
+      width: 240px; 
+      padding: 10px 12px; 
+      border: 1px solid #ddd; 
+      border-radius: 6px; 
+      font-size: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #searchBox input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 4px rgba(0,123,255,0.3);
+    }
+
+    #searchBox button { 
+      padding: 10px 16px; 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer;
+      margin-left: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    #searchBox button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    #clearRouteBtn {
+      background: #dc3545 !important;
+    }
+
+    #clearRouteBtn:hover {
+      background: #c82333 !important;
+    }
   </style>
 </head>
 <body>
+  <button id="searchButton">🔍</button>
+  <div id="searchBox">
+    <input type="text" id="addressInput">
+    <button id="searchBtn">Szukaj</button>
+    <button id="clearRouteBtn">Wyczyść trasę</button>
+  </div>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -44,12 +146,132 @@ function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 
 
     const markers = {};
     let hasZoomedToUser = false;
+    let currentUserLat = ${initialLat};
+    let currentUserLng = ${initialLng};
+    let routingControl = null;
+    let searchMarker = null;
 
-    // Function to add/update a firefighter marker
+    // Function to search for address
+    async function searchAddress(query) {
+      try {
+        const response = await fetch(\`https://nominatim.openstreetmap.org/search?format=json&q=\${encodeURIComponent(query)}\`);
+        const results = await response.json();
+        
+        if (results.length === 0) {
+          alert('Nie znaleziono adresu');
+          return;
+        }
+        
+        const first = results[0];
+        const lat = parseFloat(first.lat);
+        const lng = parseFloat(first.lon);
+        
+        // Remove old search marker
+        if (searchMarker) map.removeLayer(searchMarker);
+        
+        // Add search location marker
+        const icon = L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+        
+        searchMarker = L.marker([lat, lng], { icon: icon }).addTo(map);
+        searchMarker.bindPopup(first.display_name);
+        map.setView([lat, lng], 15);
+        
+        // Draw route from current user to search location
+        drawRoute(currentUserLat, currentUserLng, lat, lng);
+      } catch (error) {
+        alert('Błąd podczas wyszukiwania');
+      }
+    }
+
+    // Function to draw route using OSRM
+    async function drawRoute(fromLat, fromLng, toLat, toLng) {
+      // Remove old route line
+      if (routingControl) {
+        map.removeLayer(routingControl);
+      }
+      
+      try {
+        // Call OSRM API to get route coordinates
+        const osrmUrl = \`https://router.project-osrm.org/route/v1/driving/\${fromLng},\${fromLat};\${toLng},\${toLat}?overview=full&geometries=geojson\`;
+        const response = await fetch(osrmUrl);
+        const data = await response.json();
+        
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const routeCoordinates = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+          
+          // Draw route polyline
+          const routeLine = L.polyline(
+            routeCoordinates,
+            { color: 'blue', weight: 3, opacity: 0.7, dashArray: '5, 5' }
+          ).addTo(map);
+          
+          routingControl = routeLine;
+        }
+      } catch (error) {
+        console.error('OSRM route error:', error);
+        // Fallback to straight line if OSRM fails
+        const routeLine = L.polyline(
+          [[fromLat, fromLng], [toLat, toLng]],
+          { color: 'blue', weight: 3, opacity: 0.7, dashArray: '5, 5' }
+        ).addTo(map);
+        routingControl = routeLine;
+      }
+    }
+
+    // Clear route function
+    function clearRoute() {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+      if (searchMarker) {
+        map.removeLayer(searchMarker);
+        searchMarker = null;
+      }
+    }
+
+    // Event listeners
+    document.getElementById('searchBtn').addEventListener('click', function() {
+      const address = document.getElementById('addressInput').value;
+      if (address) searchAddress(address);
+    });
+
+    document.getElementById('addressInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const address = document.getElementById('addressInput').value;
+        if (address) searchAddress(address);
+      }
+    });
+
+    document.getElementById('clearRouteBtn').addEventListener('click', clearRoute);
+
+    // Toggle search box
+    document.getElementById('searchButton').addEventListener('click', function() {
+      const box = document.getElementById('searchBox');
+      box.classList.toggle('show');
+      if (box.classList.contains('show')) {
+        document.getElementById('addressInput').focus();
+      }
+    });
+
     function updateFirefighterMarker(id, lat, lng, firefighterName, isCurrentUser) {
       const key = 'firefighter_' + id;
       if (markers[key]) {
         map.removeLayer(markers[key]);
+      }
+      
+      // Store current user location for route calculation
+      if (isCurrentUser) {
+        currentUserLat = lat;
+        currentUserLng = lng;
       }
       
       // Different colored marker for each firefighter
@@ -76,14 +298,6 @@ function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 
       }
     }
 
-    map.on('click', function(e) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'click',
-        lat: e.latlng.lat,
-        lng: e.latlng.lng
-      }));
-    });
-
     document.addEventListener('message', function(event) {
       handleMessage(event.data);
     });
@@ -94,17 +308,7 @@ function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 
     function handleMessage(data) {
       try {
         const msg = JSON.parse(data);
-        if (msg.type === 'addMarker') {
-          const key = msg.lat + ',' + msg.lng;
-          if (markers[key]) {
-            map.removeLayer(markers[key]);
-          }
-          const marker = L.marker([msg.lat, msg.lng]).addTo(map);
-          if (msg.label) {
-            marker.bindPopup(msg.label).openPopup();
-          }
-          markers[key] = marker;
-        } else if (msg.type === 'updateFirefighters') {
+        if (msg.type === 'updateFirefighters') {
           // Update all firefighter locations
           msg.locations.forEach(function(loc) {
             var isCurrentUser = msg.currentFirefighterId && loc.firefighter_id === msg.currentFirefighterId;
@@ -121,8 +325,6 @@ function generateLeafletHTML(initialLat: number = 52.2297, initialLng: number = 
 
 export default function Mapa() {
   const webViewRef = useRef<WebView>(null);
-  const [editing, setEditing] = useState<{ lat: number; lng: number } | null>(null);
-  const [tempLabel, setTempLabel] = useState("");
   const pollIntervalRef = useRef<number | null>(null);
   const { firefighterId } = useLocalSearchParams() as { firefighterId?: string };
   const [initialLocation, setInitialLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -236,28 +438,7 @@ export default function Mapa() {
   }, [isWebViewReady, firefighterId, firefighters]);
 
   function onMessage(event: any) {
-    try {
-      const msg = JSON.parse(event.nativeEvent.data);
-      if (msg.type === 'click') {
-        setEditing({ lat: msg.lat, lng: msg.lng });
-        setTempLabel("");
-      }
-    } catch (err) {
-      console.warn('Map message error', err);
-    }
-  }
-
-  function saveMarker() {
-    if (!editing) return;
-    const message = JSON.stringify({
-      type: 'addMarker',
-      lat: editing.lat,
-      lng: editing.lng,
-      label: tempLabel
-    });
-    webViewRef.current?.postMessage(message);
-    setEditing(null);
-    setTempLabel("");
+    // Message handler - currently unused since click markers are disabled
   }
 
   return (
@@ -266,46 +447,14 @@ export default function Mapa() {
         ref={webViewRef}
         originWhitelist={['*']}
         source={{ html: generateLeafletHTML(initialLocation?.lat, initialLocation?.lng) }}
-        key={initialLocation ? 'with-location' : 'default'} // Force reload when location is set
+        key={initialLocation ? 'with-location' : 'default'}
         style={styles.map}
         onMessage={onMessage}
         onLoadEnd={() => setIsWebViewReady(true)}
         javaScriptEnabled
         domStorageEnabled
       />
-
-      <View style={styles.hintRow}>
-        <Text style={styles.hintText}>Kliknij na mapie, aby dodać znacznik</Text>
       </View>
-
-      <Modal visible={editing !== null} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Dodaj znacznik</Text>
-            <Text style={styles.modalLabel}>Współrzędne:</Text>
-            <Text style={styles.modalCoord}>
-              {editing ? `${editing.lat.toFixed(6)}, ${editing.lng.toFixed(6)}` : ""}
-            </Text>
-            <Text style={styles.modalLabel}>Etykieta:</Text>
-            <TextInput
-              value={tempLabel}
-              onChangeText={setTempLabel}
-              placeholder="np. Miejsce zdarzenia"
-              style={styles.input}
-            />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={() => setEditing(null)}>
-                <Text>Anuluj</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={saveMarker}>
-                <Text style={{ color: colors.surface }}>Zapisz</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
   );
 }
 

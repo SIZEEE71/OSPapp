@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSimPhoneNumber } from "./hooks/useSimPhoneNumber";
 import colors from "./theme";
 
 export default function Index() {
@@ -10,6 +11,7 @@ export default function Index() {
   const [fighters, setFighters] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { phoneNumber, firefighterId: simFirefighterId, loading: simLoading, error: simError } = useSimPhoneNumber();
 
   useEffect(() => {
     let mounted = true;
@@ -36,6 +38,17 @@ export default function Index() {
     };
   }, []);
 
+  // Auto-login when SIM firefighter is found
+  useEffect(() => {
+    if (simFirefighterId && !simLoading) {
+      setSelected(simFirefighterId);
+      // Auto enter after 500ms
+      setTimeout(() => {
+        router.push({ pathname: ("/home" as any), params: { firefighterId: String(simFirefighterId) } });
+      }, 500);
+    }
+  }, [simFirefighterId, simLoading]);
+
   async function onEnter() {
     if (!selected) return;
     router.push({ pathname: ("/home" as any), params: { firefighterId: String(selected) } });
@@ -45,10 +58,16 @@ export default function Index() {
     <View style={styles.container}>
       <Text style={styles.label}>Select Firefighter</Text>
 
+      {simLoading && <Text style={styles.simStatus}>Checking SIM...</Text>}
+      {phoneNumber && !simFirefighterId && <Text style={styles.simStatus}>Phone: {phoneNumber}</Text>}
+      {simError && <Text style={styles.simError}>SIM Error: {simError}</Text>}
+      {simFirefighterId && <Text style={styles.simSuccess}>Auto-logging...</Text>}
+
       <TouchableOpacity
         style={styles.selector}
         onPress={() => setOpen((v) => !v)}
         accessibilityLabel="Open firefighter list"
+        disabled={simLoading || !!simFirefighterId}
       >
         <Text>{selected ? (fighters.find((f) => f.id === selected)?.name ?? 'Selected') : (loading ? 'Loading...' : 'Choose...')}</Text>
       </TouchableOpacity>
@@ -78,7 +97,7 @@ export default function Index() {
       <TouchableOpacity
         style={[styles.enter, !selected && styles.enterDisabled]}
         onPress={onEnter}
-        disabled={!selected}
+        disabled={!selected || simLoading || !!simFirefighterId}
       >
         <Text style={styles.enterText}>ENTER</Text>
       </TouchableOpacity>
@@ -118,4 +137,8 @@ const styles = StyleSheet.create({
   },
   enterDisabled: { backgroundColor: colors.disabled },
   enterText: { color: colors.text, fontWeight: "600" },
+  simStatus: { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
+  simError: { fontSize: 12, color: '#dc3545', marginBottom: 8 },
+  simSuccess: { fontSize: 12, color: '#28a745', marginBottom: 8, fontWeight: '600' },
 });
+
