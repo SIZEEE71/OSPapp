@@ -18,3 +18,17 @@
 - sfinalizować wybór kolorów
 
 
+## [0.2.0] - 26.11.2025
+### Dodano/zmieniono/poprawiono
+- dodano nowe tabele w bazie danych do obsługi wyposazenia strazakow
+- poprawiono wyswietlanie i przesylanie ID strazaka zalogowanego
+- dodano kafelki do ekranu glownego
+- dobrano odpowiednie kolory
+- dodano podstawowe(początki) wyposazenia strazakow
+- dodano mozliwosc wprowadzania stanu wyposzaenia i ilosci
+- dodano mozliwosc wprowadzenia notatek do wyposazenia
+- wprowadzono route do wyposazenia oraz powrot
+### TODO
+- dodanie całego wyposazenia dla strazakow
+
+

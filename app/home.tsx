@@ -1,12 +1,19 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useLocationTracking } from "./hooks/useLocationTracking";
 import colors from "./theme";
 
 export default function Home() {
   const router = useRouter();
   const { firefighterId } = useLocalSearchParams() as { firefighterId?: string };
   const [firefighterName, setFirefighterName] = useState<string | null>(null);
+
+  // Track location for this firefighter
+  useLocationTracking({
+    firefighterId: firefighterId ? parseInt(firefighterId, 10) : 0,
+    enabled: !!firefighterId,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +51,7 @@ export default function Home() {
           { key: "raporty", label: "Raporty", icon: "📄" },
           { key: "powiadomienia", label: "Powiadomienia", icon: "🔔" },
           { key: "ustawienia", label: "Ustawienia", icon: "⚙️" },
+          { key: "Pojazdy i sprzęt", label: "Pojazdy i Sprzęt", icon: "🚒" },
         ].map((tile) => (
           <TouchableOpacity
             key={tile.key}
