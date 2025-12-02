@@ -2,10 +2,9 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
+import { API_ENDPOINTS } from "./config/api";
 import colors from "./theme";
 
-const API_URL = 'http://qubis.pl:4000/api/location/all';
-const FIREFIGHTERS_URL = 'http://qubis.pl:4000/api/firefighters';
 const POLL_INTERVAL_MS = 5000; // 5 seconds
 
 interface FirefighterLocation {
@@ -42,7 +41,7 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
       border: none;
       border-radius: 50%;
       cursor: pointer;
-      font-size: 26px;
+      font-size: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       display: flex;
       align-items: center;
@@ -126,6 +125,39 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     #clearRouteBtn:hover {
       background: #c82333 !important;
     }
+
+    #hydrantButton {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      z-index: 1001;
+      width: 40px;
+      height: 40px;
+      background: #ff6b6b;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    #hydrantButton:hover {
+      background: #ff5252;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transform: scale(1.1);
+    }
+
+    #hydrantButton.active {
+      background: #28a745;
+    }
+
+    #hydrantButton.active:hover {
+      background: #20c997;
+    }
   </style>
 </head>
 <body>
@@ -135,6 +167,7 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     <button id="searchBtn">Szukaj</button>
     <button id="clearRouteBtn">Wyczyść trasę</button>
   </div>
+  <button id="hydrantButton" title="Hydranty">💧</button>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -150,6 +183,103 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     let currentUserLng = ${initialLng};
     let routingControl = null;
     let searchMarker = null;
+    let hydrantMarkers = [];
+    let hydrantsVisible = false;
+
+
+    // Function to fetch hydrants from Overpass API
+    async function fetchHydrants() {
+      try {
+        // Fixed bounds for Łososina Dolna gmina (voivodeship: Małopolskie)
+        // Center: 49.741641, 20.625104
+        let south = 49.7016;
+        let west = 20.5551;
+        let north = 49.7816;
+        let east = 20.6951;
+        
+        // Use different format for better results
+        const query = '[out:json];(node["emergency"="fire_hydrant"](' + south + ',' + west + ',' + north + ',' + east + '););out geom;';
+        const url = 'https://overpass-api.de/api/interpreter';
+        
+        addDebug('Sending query to Overpass...');
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          body: query,
+          headers: { 'Content-Type': 'application/osm3s' }
+        });
+        
+        if (!response.ok) {
+          return [];
+        }
+        
+        const data = await response.json();
+        
+        const hydrants = data.elements ? data.elements.filter(el => el.type === 'node') : [];
+        
+        // Limit to max 500 hydrants for performance
+        const limited = hydrants.slice(0, 500);
+        
+        return limited;
+      } catch (error) {
+        return [];
+      }
+    }
+
+    // Function to show/hide hydrants
+    async function toggleHydrants() {
+      const btn = document.getElementById('hydrantButton');
+      
+      if (hydrantsVisible) {
+        // Hide hydrants
+        hydrantMarkers.forEach(marker => map.removeLayer(marker));
+        hydrantMarkers = [];
+        hydrantsVisible = false;
+        btn.classList.remove('active');
+      } else {
+        // Show hydrants
+        btn.style.opacity = '0.5';
+        
+        const hydrants = await fetchHydrants();
+        
+        // Clear previous hydrants
+        hydrantMarkers.forEach(marker => map.removeLayer(marker));
+        hydrantMarkers = [];
+        
+        if (hydrants.length === 0) {
+          hydrantsVisible = true;
+          btn.classList.add('active');
+          btn.style.opacity = '1';
+          return;
+        }
+        
+        let rendered = 0;
+        hydrants.forEach(hydrant => {
+          const lat = hydrant.lat;
+          const lon = hydrant.lon;
+          
+          if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
+            const marker = L.circleMarker([lat, lon], {
+              radius: 8,
+              fillColor: '#ff6b6b',
+              color: '#cc0000',
+              weight: 2,
+              opacity: 0.9,
+              fillOpacity: 0.7
+            });
+            
+            marker.bindPopup('Hydrant<br>Lat: ' + lat.toFixed(4) + '<br>Lng: ' + lon.toFixed(4));
+            marker.addTo(map);
+            hydrantMarkers.push(marker);
+            rendered++;
+          }
+        });
+        
+        hydrantsVisible = true;
+        btn.classList.add('active');
+        btn.style.opacity = '1';
+      }
+    }
 
     // Function to search for address
     async function searchAddress(query) {
@@ -253,6 +383,9 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
 
     document.getElementById('clearRouteBtn').addEventListener('click', clearRoute);
 
+    // Hydrant button
+    document.getElementById('hydrantButton').addEventListener('click', toggleHydrants);
+
     // Toggle search box
     document.getElementById('searchButton').addEventListener('click', function() {
       const box = document.getElementById('searchBox');
@@ -337,7 +470,7 @@ export default function Mapa() {
     let mounted = true;
     async function fetchFirefighters() {
       try {
-        const res = await fetch(FIREFIGHTERS_URL);
+        const res = await fetch(API_ENDPOINTS.firefighters.list);
         const data = await res.json();
         if (mounted) {
           setFirefighters(Array.isArray(data) ? data : []);
@@ -357,7 +490,7 @@ export default function Mapa() {
     async function fetchLocations() {
       if (!mounted) return;
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(API_ENDPOINTS.location.all);
         const locations: FirefighterLocation[] = await res.json();
         
         if (!mounted) return;

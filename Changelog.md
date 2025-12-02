@@ -32,3 +32,12 @@
 - dodanie całego wyposazenia dla strazakow
 - pasuje pewnie dodac tutaj cos ze naczelnik lub prezes lub konserwator ma opcje dodania lub podgladu wyposazenia samochodu, przegladow sprzetu itp
 
+
+## [0.3.0] - 26.11.2025
+- dodano mape do aplikacji
+- dodano pokazywanie znacnzikow strazakow w ich lokalizacji
+- dodano zczytywanie numeru telefonu do logowania
+- dodano zczytywanie lokalizacji w celu wyswietlenia na mapach
+- dodano wyszukiwanie adresu i rysowanie drogi do celu
+- dodanie logowania za pomocą numeru telefonu
+- dodano zoom na lokalizacje strazaka 

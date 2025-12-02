@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { PermissionsAndroid, Platform } from 'react-native';
+import { API_ENDPOINTS } from '../config/api';
 
 interface PhoneNumber {
   phoneNumber: string;
   slotId: number;
   subscriptionId: number;
 }
-
-const API_URL = 'http://qubis.pl:4000/api/firefighters/phone';
 
 function normalizePhoneNumber(phone: string): string {
   if (!phone) return '';
@@ -108,7 +107,7 @@ export function useSimPhoneNumber() {
         try {
           const normalized = normalizePhoneNumber(phone);
           
-          const url = `${API_URL}/${encodeURIComponent(normalized)}`;
+          const url = API_ENDPOINTS.firefighters.byPhone(normalized);
           const response = await fetch(url);
           if (response.ok) {
             const firefighter = await response.json();

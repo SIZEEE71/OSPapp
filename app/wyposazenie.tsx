@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { API_ENDPOINTS } from "./config/api";
 import colors from "./theme";
 
 type Condition = "Nowy" | "Dobry" | "Zuzyty";
@@ -23,8 +24,6 @@ export default function Wyposazenie() {
   const [tempNotes, setTempNotes] = useState<string>('');
   const [firefighterId, setFirefighterId] = useState<number | null>(null);
 
-  const BASE_URL = 'http://qubis.pl:4000';
-
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -32,8 +31,8 @@ export default function Wyposazenie() {
       try {
         // fetch categories and items (catalog) in parallel
         const [catsRes, itemsRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/equipment/categories`),
-          fetch(`${BASE_URL}/api/equipment/items`),
+          fetch(API_ENDPOINTS.equipment.categories),
+          fetch(API_ENDPOINTS.equipment.items),
         ]);
 
         const catsBody = await catsRes.json().catch(() => []);
@@ -65,7 +64,7 @@ export default function Wyposazenie() {
           const ffId = paramFirefighterId;
           if (!mounted) return;
           setFirefighterId(ffId);
-          const resAssigned = await fetch(`${BASE_URL}/api/firefighters/${ffId}/equipment`);
+          const resAssigned = await fetch(API_ENDPOINTS.firefighters.equipment(ffId));
           const assignedBody = await resAssigned.json().catch(() => ({ items: [] }));
           const rows = assignedBody.items || [];
           for (const r of rows) {
@@ -208,7 +207,7 @@ export default function Wyposazenie() {
                 }
               }
 
-              const res = await fetch(`${BASE_URL}/api/firefighters/${ffId}/equipment`, {
+              const res = await fetch(API_ENDPOINTS.firefighters.equipment(ffId), {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: payloadItems })
               });
 

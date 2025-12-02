@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { useEffect, useRef } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 
-const API_URL = 'http://qubis.pl:4000/api/location/update';
 const INTERVAL_MS = 3000; // 3 seconds
 
 interface LocationTrackingParams {
@@ -60,7 +60,7 @@ export function useLocationTracking({ firefighterId, enabled = true }: LocationT
 
         const { latitude, longitude } = location.coords;
 
-        await fetch(API_URL, {
+        await fetch(API_ENDPOINTS.location.update, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
