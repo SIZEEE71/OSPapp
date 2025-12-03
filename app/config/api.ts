@@ -16,6 +16,20 @@ export const API_ENDPOINTS = {
     categories: `${API_BASE_URL}/equipment/categories`,
     items: `${API_BASE_URL}/equipment/items`,
   },
+  vehicles: {
+    list: () => `${API_BASE_URL}/vehicles`,
+    get: (id: number) => `${API_BASE_URL}/vehicles/${id}`,
+    create: `${API_BASE_URL}/vehicles`,
+    update: (id: number) => `${API_BASE_URL}/vehicles/${id}`,
+    delete: (id: number) => `${API_BASE_URL}/vehicles/${id}`,
+  },
+  stationEquipment: {
+    list: () => `${API_BASE_URL}/station-equipment`,
+    get: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
+    create: `${API_BASE_URL}/station-equipment`,
+    update: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
+    delete: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
+  },
 };
 
 export const OSRM = {

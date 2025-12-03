@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { BackHandler, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationTracking } from "./hooks/useLocationTracking";
 import colors from "./theme";
 
@@ -38,9 +39,17 @@ export default function Home() {
     return () => { mounted = false; };
   }, [firefighterId]);
 
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      return true;
+    });
+    return () => backHandler.remove();
+  }, []);
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.subtitle}>Selected: {firefighterName ?? firefighterId ?? "None"}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.subtitle}>Selected: {firefighterName ?? firefighterId ?? "None"}</Text>
       <View style={styles.grid}>
         {[
           { key: "wyposazenie", label: "Wyposażenie", icon: "🧰" },
@@ -49,8 +58,8 @@ export default function Home() {
           { key: "raporty", label: "Raporty", icon: "📄" },
           { key: "powiadomienia", label: "Powiadomienia", icon: "🔔" },
           { key: "ustawienia", label: "Ustawienia", icon: "⚙️" },
-          { key: "Pojazdy i sprzęt", label: "Pojazdy i sprzęt", icon: "🚒" },
-          { key: "strażacy", label: "Strażacy", icon: "👩‍🚒" },
+          { key: "pojazdy-sprzet", label: "Pojazdy i sprzęt", icon: "🚒" },
+          { key: "strazacy", label: "Strażacy", icon: "👩‍🚒" },
         ].map((tile) => (
           <TouchableOpacity
             key={tile.key}
@@ -62,7 +71,8 @@ export default function Home() {
           </TouchableOpacity>
         ))}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

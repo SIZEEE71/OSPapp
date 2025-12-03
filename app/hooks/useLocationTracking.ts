@@ -54,7 +54,7 @@ export function useLocationTracking({ firefighterId, enabled = true }: LocationT
 
         // Try to get location with timeout and fallback options
         const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low, // Use Low for emulator compatibility
+          accuracy: Location.Accuracy.Balanced, // Use Low for emulator compatibility
           timeInterval: 5000, // Maximum wait time
         });
 

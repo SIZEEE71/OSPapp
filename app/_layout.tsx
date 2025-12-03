@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import React from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import colors from "./theme";
 
 const APP_NAME = "OSP Mobilny";
@@ -17,10 +18,10 @@ function LayoutHeader() {
 
 export default function RootLayout() {
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <LayoutHeader />
       <Stack screenOptions={{ headerShown: false }} />
-    </View>
+    </SafeAreaView>
   );
 }
 

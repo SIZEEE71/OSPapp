@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { BackHandler, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { API_ENDPOINTS } from "./config/api";
 import colors from "./theme";
@@ -158,6 +158,18 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     #hydrantButton.active:hover {
       background: #20c997;
     }
+
+    .firefighter-marker {
+      pointer-events: auto !important;
+    }
+
+    .firefighter-marker div {
+      transform: scale(1) !important;
+    }
+
+    .leaflet-zoom-animated .firefighter-marker div {
+      transform: scale(1) !important;
+    }
   </style>
 </head>
 <body>
@@ -190,8 +202,6 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     // Function to fetch hydrants from Overpass API
     async function fetchHydrants() {
       try {
-        // Fixed bounds for Łososina Dolna gmina (voivodeship: Małopolskie)
-        // Center: 49.741641, 20.625104
         let south = 49.7016;
         let west = 20.5551;
         let north = 49.7816;
@@ -200,8 +210,6 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
         // Use different format for better results
         const query = '[out:json];(node["emergency"="fire_hydrant"](' + south + ',' + west + ',' + north + ',' + east + '););out geom;';
         const url = 'https://overpass-api.de/api/interpreter';
-        
-        addDebug('Sending query to Overpass...');
         
         const response = await fetch(url, {
           method: 'POST',
@@ -401,30 +409,37 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
         map.removeLayer(markers[key]);
       }
       
-      // Store current user location for route calculation
       if (isCurrentUser) {
         currentUserLat = lat;
         currentUserLng = lng;
       }
       
-      // Different colored marker for each firefighter
-      const colors = ['red', 'blue', 'green', 'orange', 'purple', 'darkred', 'darkblue', 'darkgreen'];
-      const color = colors[id % colors.length];
+      const parts = firefighterName.trim().split(' ').filter(p => p.length > 0);
+      const shortName = (parts.length > 1 ? parts[parts.length - 1].charAt(0) + parts[0].charAt(0) : firefighterName.substring(0, 2)).toUpperCase();
       
-      const icon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + color + '.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
+      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+      const bgColor = colors[id % colors.length];
+      
+      const divIcon = L.divIcon({
+        html: '<div style="background: ' + bgColor + '; color: white; padding: 3px 6px; border-radius: 12px; font-weight: bold; font-size: 10px; line-height: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid white; transform: scale(1); transform-origin: center;">' + shortName + '</div>',
+        iconSize: [36, 18],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18],
+        className: 'firefighter-marker'
       });
       
-      const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
-      marker.bindPopup(firefighterName);
+      const popupContent = '<strong>' + firefighterName + '</strong><br>ID: ' + id;
+      
+      const marker = L.marker([lat, lng], { icon: divIcon });
+      marker.bindPopup(popupContent, { autoClose: false, closeButton: true });
+      marker.addTo(map);
+      
+      marker.on('click', function() {
+        this.togglePopup();
+      });
+      
       markers[key] = marker;
       
-      // Auto-zoom to current user on first load
       if (isCurrentUser && !hasZoomedToUser) {
         hasZoomedToUser = true;
         map.setView([lat, lng], 16);
@@ -457,6 +472,7 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
 }
 
 export default function Mapa() {
+  const router = useRouter();
   const webViewRef = useRef<WebView>(null);
   const pollIntervalRef = useRef<number | null>(null);
   const { firefighterId } = useLocalSearchParams() as { firefighterId?: string };
@@ -476,7 +492,6 @@ export default function Mapa() {
           setFirefighters(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        // Ignore errors
       }
     }
     fetchFirefighters();
@@ -566,12 +581,20 @@ export default function Mapa() {
       });
       
       webViewRef.current.postMessage(message);
-      pendingLocationsRef.current = null; // Wyczyść pending
+      pendingLocationsRef.current = null;
     }
   }, [isWebViewReady, firefighterId, firefighters]);
 
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      router.back();
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [router]);
+
   function onMessage(event: any) {
-    // Message handler - currently unused since click markers are disabled
+    // Message handler
   }
 
   return (
@@ -587,7 +610,7 @@ export default function Mapa() {
         javaScriptEnabled
         domStorageEnabled
       />
-      </View>
+    </View>
   );
 }
 
