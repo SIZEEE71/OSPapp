@@ -1,16 +1,16 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
@@ -272,6 +272,11 @@ export default function VehiclesAndEquipment() {
     ]);
   };
 
+  function formatDate(dateString: string): string {
+  if (!dateString) return "";
+  return dateString.split('T')[0];
+}
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Tabs */}
@@ -390,12 +395,14 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Nazwa"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={vehicleForm.name}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, name: text })}
             />
             <TextInput
               placeholder="Numer operacyjny"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={vehicleForm.operational_number}
               onChangeText={(text) =>
                 setVehicleForm({ ...vehicleForm, operational_number: text })
@@ -404,7 +411,8 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Przegląd do (YYYY-MM-DD)"
               style={styles.input}
-              value={vehicleForm.inspection_until}
+              placeholderTextColor={colors.textMuted}
+              value={formatDate(vehicleForm.inspection_until)}
               onChangeText={(text) =>
                 setVehicleForm({ ...vehicleForm, inspection_until: text })
               }
@@ -412,7 +420,8 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Ubezpieczenie do (YYYY-MM-DD)"
               style={styles.input}
-              value={vehicleForm.insurance_until}
+              placeholderTextColor={colors.textMuted}
+              value={formatDate(vehicleForm.insurance_until)}
               onChangeText={(text) =>
                 setVehicleForm({ ...vehicleForm, insurance_until: text })
               }
@@ -420,6 +429,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Max osób"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.max_people}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, max_people: text })}
@@ -427,6 +437,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Ilość środków gaśniczych"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.fire_extinguishing_agents}
               onChangeText={(text) =>
@@ -436,6 +447,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Pojemność wody (litry)"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.water_capacity}
               onChangeText={(text) =>
@@ -445,6 +457,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Opis autopompy"
               style={[styles.input, styles.textArea]}
+              placeholderTextColor={colors.textMuted}
               multiline
               value={vehicleForm.pump_description}
               onChangeText={(text) =>
@@ -454,6 +467,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Masa całkowita (kg)"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.total_mass}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, total_mass: text })}
@@ -461,6 +475,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Moc silnika (kW)"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.engine_power}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, engine_power: text })}
@@ -468,12 +483,14 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Rodzaj napędu (diesel/benzyna/hybrid)"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={vehicleForm.drive_type}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, drive_type: text })}
             />
             <TextInput
               placeholder="Producent podwozia"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={vehicleForm.chassis_producer}
               onChangeText={(text) =>
                 setVehicleForm({ ...vehicleForm, chassis_producer: text })
@@ -482,6 +499,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Rok produkcji"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={vehicleForm.body_production_year}
               onChangeText={(text) =>
@@ -491,6 +509,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Opis"
               style={[styles.input, styles.textArea]}
+              placeholderTextColor={colors.textMuted}
               multiline
               value={vehicleForm.description}
               onChangeText={(text) => setVehicleForm({ ...vehicleForm, description: text })}
@@ -532,12 +551,14 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Nazwa"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={equipmentForm.name}
               onChangeText={(text) => setEquipmentForm({ ...equipmentForm, name: text })}
             />
             <TextInput
               placeholder="Kategoria (np. pompa, agregat)"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={equipmentForm.category_slug}
               onChangeText={(text) =>
                 setEquipmentForm({ ...equipmentForm, category_slug: text })
@@ -546,6 +567,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Ilość"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={equipmentForm.quantity}
               onChangeText={(text) => setEquipmentForm({ ...equipmentForm, quantity: text })}
@@ -553,12 +575,14 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Gdzie się znajduje"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={equipmentForm.location}
               onChangeText={(text) => setEquipmentForm({ ...equipmentForm, location: text })}
             />
             <TextInput
               placeholder="Typ sprzętu"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               value={equipmentForm.equipment_type}
               onChangeText={(text) =>
                 setEquipmentForm({ ...equipmentForm, equipment_type: text })
@@ -567,6 +591,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Rok produkcji"
               style={styles.input}
+              placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               value={equipmentForm.production_year}
               onChangeText={(text) =>
@@ -576,6 +601,7 @@ export default function VehiclesAndEquipment() {
             <TextInput
               placeholder="Opis"
               style={[styles.input, styles.textArea]}
+              placeholderTextColor={colors.textMuted}
               multiline
               value={equipmentForm.description}
               onChangeText={(text) => setEquipmentForm({ ...equipmentForm, description: text })}
@@ -615,11 +641,11 @@ export default function VehiclesAndEquipment() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Przegląd do:</Text>
-                  <Text style={styles.detailValue}>{selectedVehicle.inspection_until || "—"}</Text>
+                  <Text style={styles.detailValue}>{formatDate(selectedVehicle.inspection_until) || "—"}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Ubezpieczenie do:</Text>
-                  <Text style={styles.detailValue}>{selectedVehicle.insurance_until || "—"}</Text>
+                  <Text style={styles.detailValue}>{formatDate(selectedVehicle.insurance_until) || "—"}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Max osób:</Text>
@@ -692,7 +718,7 @@ export default function VehiclesAndEquipment() {
               </>
             )}
             </ScrollView>
-            <View style={[styles.modalActions, { paddingBottom: insets.bottom + 15 }]}>
+            <View style={[styles.modalActions]}>
               <TouchableOpacity
                 style={styles.closeBtn}
                 onPress={() => setShowDetailsModal(false)}

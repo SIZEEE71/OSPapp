@@ -1,12 +1,10 @@
 import { Stack } from "expo-router";
 import React from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import colors from "./theme";
 
 const APP_NAME = "OSP Mobilny";
-const STATUS_BAR_PADDING = Platform.OS === "ios" ? 12 : 8;
-const HEADER_HEIGHT = 56 + STATUS_BAR_PADDING;
 
 function LayoutHeader() {
   return (
@@ -18,9 +16,14 @@ function LayoutHeader() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <LayoutHeader />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -28,8 +31,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   header: {
     width: "100%",
-    height: HEADER_HEIGHT,
-    paddingTop: STATUS_BAR_PADDING,
+    height: 45,
     alignItems: "center",
     justifyContent: "center",
     borderBottomWidth: 1,

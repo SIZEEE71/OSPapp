@@ -18,6 +18,7 @@ interface FirefighterLocation {
 interface Firefighter {
   id: number;
   name: string;
+  surname: string;
 }
 
 function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number = 20.627574) {
@@ -403,7 +404,7 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
       }
     });
 
-    function updateFirefighterMarker(id, lat, lng, firefighterName, isCurrentUser) {
+    function updateFirefighterMarker(id, lat, lng, firefighterName, firefighterSurname, isCurrentUser) {
       const key = 'firefighter_' + id;
       if (markers[key]) {
         map.removeLayer(markers[key]);
@@ -414,8 +415,9 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
         currentUserLng = lng;
       }
       
-      const parts = firefighterName.trim().split(' ').filter(p => p.length > 0);
-      const shortName = (parts.length > 1 ? parts[parts.length - 1].charAt(0) + parts[0].charAt(0) : firefighterName.substring(0, 2)).toUpperCase();
+      const nameFirst = firefighterName ? firefighterName.charAt(0).toUpperCase() : '?';
+      const surnameFirst = firefighterSurname ? firefighterSurname.charAt(0).toUpperCase() : '?';
+      const shortName = nameFirst + surnameFirst;
       
       const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
       const bgColor = colors[id % colors.length];
@@ -460,7 +462,7 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
           // Update all firefighter locations
           msg.locations.forEach(function(loc) {
             var isCurrentUser = msg.currentFirefighterId && loc.firefighter_id === msg.currentFirefighterId;
-            updateFirefighterMarker(loc.firefighter_id, loc.lat, loc.lng, loc.firefighterName, isCurrentUser);
+            updateFirefighterMarker(loc.firefighter_id, loc.lat, loc.lng, loc.firefighterName, loc.firefighterSurname, isCurrentUser);
           });
         }
       } catch(e) {}
@@ -486,7 +488,7 @@ export default function Mapa() {
     let mounted = true;
     async function fetchFirefighters() {
       try {
-        const res = await fetch(API_ENDPOINTS.firefighters.list);
+        const res = await fetch('http://qubis.pl:4000/api/firefighters-extended');
         const data = await res.json();
         if (mounted) {
           setFirefighters(Array.isArray(data) ? data : []);
@@ -530,7 +532,8 @@ export default function Mapa() {
           const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
           return {
             ...loc,
-            firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`
+            firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`,
+            firefighterSurname: firefighter?.surname || ''
           };
         });
         
@@ -570,7 +573,8 @@ export default function Mapa() {
         const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
         return {
           ...loc,
-          firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`
+          firefighterName: firefighter?.name || `Strażak #${loc.firefighter_id}`,
+          firefighterSurname: firefighter?.surname || ''
         };
       });
       

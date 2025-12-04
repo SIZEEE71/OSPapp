@@ -24,6 +24,12 @@ type Language = any;
 
 const API_BASE = "http://qubis.pl:4000/api";
 
+// Format date to YYYY-MM-DD (remove time)
+function formatDate(dateString: string): string {
+  if (!dateString) return "";
+  return dateString.split('T')[0];
+}
+
 // Simple Select Component
 interface SelectFieldProps {
   label: string;
@@ -138,7 +144,7 @@ export default function Strazacy() {
 
   const [languageForm, setLanguageForm] = useState({
     language_id: "",
-    proficiency_level: "basic",
+    proficiency_level: "",
   });
 
   // Fetch firefighters
@@ -345,7 +351,7 @@ export default function Strazacy() {
       if (res.ok) {
         Alert.alert("Sukces", "Język przypisany");
         setShowAddLanguageModal(false);
-        setLanguageForm({ language_id: "", proficiency_level: "basic" });
+        setLanguageForm({ language_id: "", proficiency_level: "" });
         setShowDetailsModal(false);
         setSelectedFirefighter(null);
         fetchFirefighters();
@@ -370,7 +376,6 @@ export default function Strazacy() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Tabs */}
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "list" && styles.tabActive]}
@@ -440,7 +445,7 @@ export default function Strazacy() {
                     </Text>
                     {firefighter.periodic_exam_until && (
                       <Text style={styles.listItemDate}>
-                        Badania: {firefighter.periodic_exam_until}
+                        Badania: {formatDate(firefighter.periodic_exam_until)}
                       </Text>
                     )}
                   </View>
@@ -623,8 +628,8 @@ export default function Strazacy() {
               <Text style={styles.checkboxLabel}>Zgoda na przetwarzanie danych</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddFirefighter}>
-              <Text style={styles.submitButtonText}>Dodaj strażaka</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleAddFirefighter}>
+              <Text style={styles.saveBtnText}>Dodaj strażaka</Text>
             </TouchableOpacity>
 
             <View style={{ height: insets.bottom + 20 }} />
@@ -667,7 +672,7 @@ export default function Strazacy() {
 
                 <View style={styles.detailsSection}>
                   <Text style={styles.detailsLabel}>Data urodzenia:</Text>
-                  <Text style={styles.detailsValue}>{selectedFirefighter.date_of_birth || "Brak"}</Text>
+                  <Text style={styles.detailsValue}>{formatDate(selectedFirefighter.date_of_birth) || "Brak"}</Text>
                 </View>
 
                 <View style={styles.detailsSection}>
@@ -682,7 +687,7 @@ export default function Strazacy() {
 
                 <View style={styles.detailsSection}>
                   <Text style={styles.detailsLabel}>Badania okresowe do:</Text>
-                  <Text style={styles.detailsValue}>{selectedFirefighter.periodic_exam_until || "Brak"}</Text>
+                  <Text style={styles.detailsValue}>{selectedFirefighter.periodic_exam_until ? formatDate(selectedFirefighter.periodic_exam_until) : "Brak"}</Text>
                 </View>
 
                 <View style={styles.detailsSection}>
@@ -737,14 +742,14 @@ export default function Strazacy() {
                   <Text style={styles.deleteButtonText}>Usuń strażaka</Text>
                 </TouchableOpacity>
 
-                <View style={{ height: insets.bottom + 20 }} />
+  
               </>
             )}
           </ScrollView>
 
-          <View style={[styles.modalActions, { paddingBottom: insets.bottom + 15 }]}>
-            <TouchableOpacity style={styles.modalCloseButtonLarge} onPress={() => setShowDetailsModal(false)}>
-              <Text style={styles.modalCloseButtonLargeText}>Zamknij</Text>
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowDetailsModal(false)}>
+              <Text style={styles.cancelBtnText}>Zamknij</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -781,12 +786,12 @@ export default function Strazacy() {
             />
           </ScrollView>
 
-          <View style={[styles.modalActions, { paddingBottom: insets.bottom + 15 }]}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowTrainingModal(false)}>
-              <Text style={styles.cancelButtonText}>Anuluj</Text>
+          <View style={[styles.modalActions]}>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleAddTraining}>
+              <Text style={styles.saveBtnText}>Dodaj</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddTraining}>
-              <Text style={styles.submitButtonText}>Dodaj</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowTrainingModal(false)}>
+              <Text style={styles.cancelBtnText}>Anuluj</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -818,21 +823,21 @@ export default function Strazacy() {
               label="Poziom zaawansowania"
               value={languageForm.proficiency_level}
               options={[
-                { label: "Podstawowy", value: "basic" },
-                { label: "Średniozaawansowany", value: "intermediate" },
-                { label: "Zaawansowany", value: "advanced" },
-                { label: "Płynny", value: "fluent" },
+                { label: "Podstawowy", value: "Podstawowy" },
+                { label: "Średniozaawansowany", value: "Średniozaawansowany" },
+                { label: "Zaawansowany", value: "Zaawansowany" },
+                { label: "Płynny", value: "Płynny" },
               ]}
               onChange={(value: string) => setLanguageForm({ ...languageForm, proficiency_level: value })}
             />
           </ScrollView>
 
-          <View style={[styles.modalActions, { paddingBottom: insets.bottom + 15 }]}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowAddLanguageModal(false)}>
-              <Text style={styles.cancelButtonText}>Anuluj</Text>
+          <View style={[styles.modalActions]}>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleAddLanguage}>
+              <Text style={styles.saveBtnText}>Dodaj</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={handleAddLanguage}>
-              <Text style={styles.submitButtonText}>Dodaj</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddLanguageModal(false)}>
+              <Text style={styles.cancelBtnText}>Anuluj</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -845,16 +850,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    paddingTop: -20,
   },
   tabBar: {
     flexDirection: "row",
-    backgroundColor: colors.headerBackground,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.text,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
     borderBottomWidth: 3,
@@ -873,7 +879,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 10,
+    padding: 5,
   },
   filterContainer: {
     flexDirection: "row",
@@ -1058,16 +1064,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
   },
-  submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-    paddingVertical: 12,
+  saveBtn: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
   },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
+  saveBtnText: {
+    color: "white",
     fontWeight: "600",
   },
   modalContainer: {
@@ -1161,35 +1166,23 @@ const styles = StyleSheet.create({
   },
   modalActions: {
     flexDirection: "row",
-    gap: 10,
+    gap: 20,
     paddingHorizontal: 15,
-    paddingTop: 15,
-    backgroundColor: colors.headerBackground,
+    paddingTop: 3,
+    paddingBottom: 10,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.textMuted,
+    borderTopColor: colors.surfaceDivider,
   },
-  cancelButton: {
+  cancelBtn: {
     flex: 1,
-    backgroundColor: colors.textMuted,
-    borderRadius: 6,
-    paddingVertical: 12,
+    backgroundColor: colors.surfaceBorder,
+    padding: 12,
+    borderRadius: 8,
     alignItems: "center",
   },
-  cancelButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  modalCloseButtonLarge: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  modalCloseButtonLargeText: {
-    color: "#fff",
-    fontSize: 14,
+  cancelBtnText: {
+    color: colors.text,
     fontWeight: "600",
   },
 });
