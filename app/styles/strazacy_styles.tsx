@@ -1,0 +1,345 @@
+import { StyleSheet } from "react-native";
+import colors from "../theme";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: -20,
+  },
+  tabBar: {
+    flexDirection: "row",
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.text,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  tabTextActive: {
+    color: colors.primary,
+  },
+  content: {
+    flex: 1,
+    padding: 5,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    marginBottom: 15,
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.headerBackground,
+    borderWidth: 1,
+    borderColor: colors.textMuted,
+  },
+  filterButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterButtonText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  filterButtonTextActive: {
+    color: "#fff",
+  },
+  loader: {
+    marginVertical: 50,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: colors.textMuted,
+    marginVertical: 30,
+    fontSize: 16,
+  },
+  listItem: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  listItemContent: {
+    flex: 1,
+  },
+  listItemTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  listItemSubtitle: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  listItemDate: {
+    fontSize: 12,
+    color: colors.primary,
+    marginTop: 4,
+  },
+  listItemArrow: {
+    fontSize: 24,
+    color: colors.textMuted,
+    marginLeft: 10,
+  },
+  formContainer: {
+    padding: 10,
+  },
+  formSection: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  pickerContainer: {
+    marginBottom: 12,
+  },
+  pickerLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  picker: {
+    backgroundColor: colors.headerBackground,
+    borderRadius: 6,
+    color: colors.text,
+  },
+  selectButton: {
+    backgroundColor: colors.surface,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  selectButtonText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  selectButtonArrow: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  selectOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+  },
+  selectModalContent: {
+    backgroundColor: colors.surface,
+    marginHorizontal: 20,
+    borderRadius: 8,
+    maxHeight: "70%",
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  selectOption: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceDivider,
+  },
+  selectOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  selectOptionText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  selectOptionTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  checkbox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  checkboxBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.surfaceBorder,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxBoxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  checkmark: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  saveBtn: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveBtnText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: colors.headerBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.textMuted,
+  },
+  modalCloseButton: {
+    fontSize: 24,
+    color: colors.text,
+    fontWeight: "bold",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 15,
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 15,
+  },
+  detailsSection: {
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.headerBackground,
+  },
+  detailsLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  detailsValue: {
+    fontSize: 14,
+    color: colors.text,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  listValue: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 6,
+    marginLeft: 10,
+  },
+  emptyValue: {
+    fontSize: 14,
+    color: colors.textMuted,
+    fontStyle: "italic",
+  },
+  actionButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deleteButton: {
+    backgroundColor: "#d9534f",
+    marginTop: 20,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 20,
+    paddingHorizontal: 15,
+    paddingTop: 3,
+    paddingBottom: 10,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceDivider,
+  },
+  cancelBtn: {
+    flex: 1,
+    backgroundColor: colors.surfaceBorder,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelBtnText: {
+    color: colors.text,
+    fontWeight: "600",
+  },
+});
+
+export default styles;

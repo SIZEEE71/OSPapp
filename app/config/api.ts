@@ -30,6 +30,19 @@ export const API_ENDPOINTS = {
     update: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
     delete: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
   },
+  alarms: {
+    list: () => `${API_BASE_URL}/alarms`,
+    get: (id: number) => `${API_BASE_URL}/alarms/${id}`,
+    create: `${API_BASE_URL}/alarms`,
+    update: (id: number) => `${API_BASE_URL}/alarms/${id}`,
+    delete: (id: number) => `${API_BASE_URL}/alarms/${id}`,
+    respond: (id: number) => `${API_BASE_URL}/alarms/${id}/respond`,
+    statsByType: `${API_BASE_URL}/alarms/stats/by-type`,
+    statsFirefighters: `${API_BASE_URL}/alarms/stats/firefighters`,
+    crew: (id: number) => `${API_BASE_URL}/alarms/${id}/crew`,
+    assignCrew: (id: number) => `${API_BASE_URL}/alarms/${id}/crew`,
+    removeCrew: (id: number, position: string) => `${API_BASE_URL}/alarms/${id}/crew/${position}`,
+  },
 };
 
 export const OSRM = {

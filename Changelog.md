@@ -77,6 +77,45 @@
 - dodano dodawanie strazakow, usuwanie
 - dodano wybor szkolen
 - dodano wybor grupy dla strazaka
-- 
+
+## [0.7.0] - 4,5,8.12.2025
+### System Alarmów (Alarms)
+- Nowa tabela `alarms` do przechowywania alarmów z polami: alarm_time, alarm_type, location, description, vehicle_id
+- Nowa tabela `alarm_responses` do śledzenia odpowiedzi strażaków na alarmy (confirmed, arrival_time)
+- Backend API endpoints
+
+### System Załogi (Crew Assignment)
+- Nowa tabela `alarm_crew` do przypisywania strażaków do konkretnych pozycji w wyjazdach
+- Backend API endpoints
+- Frontend alarmy.tsx:
+  - Lista wszystkich alarmów z możliwością filtrowania
+  - Modal do tworzenia nowych alarmów
+  - Modal do edycji szczegółów alarmu
+  - Sekcja załogi w detailsModal z wyświetlaniem przypisanych strażaków
+  - Modal do przypisywania załogi z dynamicznym wyborem pozycji na podstawie max_people pojazdu:
+    - Zawsze: Kierowca, Dowódca
+    - Dodatkowo: Strażak 1, Strażak 2, ... (zależnie od pojazdu)
+  - Przycisk do dodawania/usuwania członków załogi
+
+### Statystyka (Statistics)
+- Frontend statystyka.tsx z dwoma zakładkami:
+  - **Po typach**: całkowita liczba wyjazdów + podział wg typów alarmów
+  - **Strażacy**: ile razy każdy strażak był wpisywany w załogę alarmu
+- Backend API endpoints
+- Paski postępu do wizualizacji danych
+
+### UI/UX Improvements
+- Ustandaryzowanie przycisków w modalach (saveBtn, cancelBtn, deleteBtn)
+- Dodanie SelectField do wyboru pojazdu z dropdown listy
+- Przycisk "Statystyka" w headera alarmy.tsx do szybkiego dostępu do statystyk
+
+### Bug Fixes
+- Naprawiono błąd z Foreign Key (BIGINT vs INT)
+- Naprawiono wyświetlanie map markerów z inicjałami imienia i nazwiska
+- Naprawiono GROUP BY clause w SQL queries
+
+### Config
+- Dodanie nowych API endpoints do `app/config/api.ts`
+- Migracja do systemem stylów - styles w osobnych plikach (`app/styles/`)
 
 
