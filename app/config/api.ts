@@ -43,6 +43,14 @@ export const API_ENDPOINTS = {
     assignCrew: (id: number) => `${API_BASE_URL}/alarms/${id}/crew`,
     removeCrew: (id: number, position: string) => `${API_BASE_URL}/alarms/${id}/crew/${position}`,
   },
+  reports: {
+    list: `${API_BASE_URL}/reports`,
+    get: (id: number) => `${API_BASE_URL}/reports/${id}`,
+    create: `${API_BASE_URL}/reports`,
+    update: (id: number) => `${API_BASE_URL}/reports/${id}`,
+    delete: (id: number) => `${API_BASE_URL}/reports/${id}`,
+    byAlarm: (alarmId: number) => `${API_BASE_URL}/reports/alarm/${alarmId}`,
+  },
 };
 
 export const OSRM = {

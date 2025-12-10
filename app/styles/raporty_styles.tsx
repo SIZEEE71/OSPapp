@@ -1,0 +1,303 @@
+import { StyleSheet } from "react-native";
+import colors from "../theme";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceDivider,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  addButton: {
+    backgroundColor: colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderColor: colors.surfaceDivider,
+    borderWidth: 1,
+  },
+  addButtonText: {
+    color: colors.headerBackground,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  loader: {
+    marginTop: 50,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+  listContent: {
+    padding: 12,
+  },
+  reportItem: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  reportHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  reportNumber: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  reportDate: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  reportType: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  reportLocation: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 6,
+  },
+  reportCreatedBy: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontStyle: "italic",
+  },
+  actions: {
+    padding: 12,
+    gap: 8,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceDivider,
+  },
+  backBtn: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+  },
+  backBtnText: {
+    color: colors.text,
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceDivider,
+  },
+  modalCloseButton: {
+    fontSize: 20,
+    color: colors.text,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 15,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textMuted,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: colors.background,
+    color: colors.text,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  selectedAlarmInfo: {
+    backgroundColor: colors.headerBackground,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  selectedAlarmTitle: {
+    color: "white",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  selectedAlarmType: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  selectedAlarmLocation: {
+    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  selectedAlarmTime: {
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 12,
+  },
+  detailRow: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceDivider,
+    marginBottom: 12,
+  },
+  detailLabel: {
+    fontWeight: "600",
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  detailValue: {
+    color: colors.text,
+    fontSize: 14,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 5,
+    padding: 20,
+    paddingTop: 10,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceDivider,
+  },
+  saveBtn: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveBtnText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  cancelBtn: {
+    flex: 1,
+    backgroundColor: colors.surfaceBorder,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelBtnText: {
+    color: colors.text,
+    fontWeight: "600",
+  },
+  deleteBtn: {
+    flex: 1,
+    backgroundColor: "#dc3545",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  deleteBtnText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  alarmOption: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    marginHorizontal: 15,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  alarmOptionType: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  alarmOptionLocation: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  alarmOptionTime: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontStyle: "italic",
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceBorder,
+  },
+  infoBox: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.headerBackground,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  infoValue: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: "500",
+  },
+});
+
+export default styles;

@@ -9,7 +9,7 @@ export default function Index() {
   const router = useRouter();
   const [selected, setSelected] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
-  const [fighters, setFighters] = useState<Array<{ id: number; name: string }>>([]);
+  const [fighters, setFighters] = useState<Array<{ id: number; name: string; surname: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { phoneNumber, firefighterId: simFirefighterId, loading: simLoading, error: simError } = useSimPhoneNumber();
@@ -19,10 +19,10 @@ export default function Index() {
     async function fetchFighters() {
       try {
         setLoading(true);
-        const res = await fetch('http://qubis.pl:4000/api/firefighters');
+        const res = await fetch('http://qubis.pl:4000/api/firefighters-extended');
         const data = await res.json();
         if (!mounted) return;
-        setFighters(Array.isArray(data) ? data.map((d: any) => ({ id: d.id, name: d.name })) : []);
+        setFighters(Array.isArray(data) ? data.map((d: any) => ({ id: d.id, name: d.name, surname: d.surname })) : []);
         setError(null);
       } catch (err: any) {
         console.log('GET API error:', err);
