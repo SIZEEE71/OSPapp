@@ -1,0 +1,185 @@
+import { StyleSheet } from "react-native";
+import colors from "../theme";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: -27,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: colors.headerBackground,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#ffffff",
+  },
+  backButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  userInfo: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  userInfoText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  userRank: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  badge: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    marginTop: 12,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.text,
+    textAlign: "center",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  listContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
+    backgroundColor: colors.background,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  notificationCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    marginHorizontal: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    flex: 1,
+  },
+  cardDate: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginLeft: 8,
+  },
+  cardLocation: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginBottom: 6,
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
+  cardMeta: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  errorContainer: {
+    backgroundColor: "#ffebee",
+    borderRadius: 8,
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  errorText: {
+    fontSize: 13,
+    color: "#c62828",
+    fontWeight: "500",
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+    alignItems: "center",
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+});
+
+export default styles;

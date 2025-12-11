@@ -118,4 +118,36 @@
 - Dodanie nowych API endpoints do `app/config/api.ts`
 - Migracja do systemem stylów - styles w osobnych plikach (`app/styles/`)
 
+## [0.8.0] - 10-11.12.2025
+### Powiadomienia (Notifications)
+#### Backend (`src/routes/notifications.js`)
+- Nowy API endpoint `GET /api/notifications/:firefighterId`
+- Role-based notifications system:
+  - **Wszyscy strażacy**: ostatnie 10 alarmów (przeszłe) + własne badania okresowe (`periodic_exam_until`)
+  - **Naczelnik (rank 11)**: wszystkie powyższe + badania okresowe wszystkich strażaków
+  - **Prezes (rank 12)**: wszystkie powyższe + przeglądy i ubezpieczenia pojazdów
+
+#### Frontend (`app/powiadomienia.tsx`)
+- Nowy ekran Powiadomienia z SectionList do organizacji danych po kategoriach
+- 4 sekcje warunkowe:
+  1. 📢 Przeszłe alarmy (wszyscy)
+  2. 🏥 Moje badania okresowe (wszyscy)
+  3. 🏥 Badania okresowe strażaków - Naczelnik (tylko Naczelnik+)
+  4. 🚗 Pojazdy - przeglądy i ubezpieczenia - Prezes (tylko Prezes)
+- Karty powiadomień z lewym obramowaniem kolorowanym wg pilności
+- Wyświetlanie imienia i rangi zalogowanego strażaka
+- Nawigacja do szczegółów (alarmy, pojazdy) z TouchableOpacity
+
+#### Ustawienia (`app/ustawienia.tsx`)
+- Implementacja AsyncStorage do persist settings
+- Nowe handlery: `loadSettings()`, `saveSettings()`, permission request functions
+- Obsługa permisji notifications i location
+- Wibracja testowa przy włączaniu wibracji
+- Reset settings z potwierdzeniem
+
+### TODO
+- Alarmowanie
+
+
+
 

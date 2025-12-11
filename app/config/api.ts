@@ -51,6 +51,9 @@ export const API_ENDPOINTS = {
     delete: (id: number) => `${API_BASE_URL}/reports/${id}`,
     byAlarm: (alarmId: number) => `${API_BASE_URL}/reports/alarm/${alarmId}`,
   },
+  notifications: {
+    get: (firefighterId: number) => `${API_BASE_URL}/notifications/${firefighterId}`,
+  },
 };
 
 export const OSRM = {
