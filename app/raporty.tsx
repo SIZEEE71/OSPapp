@@ -1,16 +1,17 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    FlatList,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  FlatList,
+  Linking,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
@@ -487,6 +488,19 @@ export default function Raporty() {
             </ScrollView>
 
             <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.downloadBtn}
+                onPress={() => {
+                  if (selectedReport) {
+                    const pdfUrl = `${API_BASE}/reports/${selectedReport.id}/pdf`;
+                    Linking.openURL(pdfUrl).catch(() => {
+                      Alert.alert("Błąd", "Nie udało się otworzyć PDF");
+                    });
+                  }
+                }}
+              >
+                <Text style={styles.downloadBtnText}>📥 Pobierz PDF</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteBtn}
                 onPress={() =>

@@ -1,16 +1,16 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    FlatList,
-    Modal,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  FlatList,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import SelectField from "./components/SelectField";
@@ -22,6 +22,7 @@ const API_BASE = "http://qubis.pl:4000/api";
 interface Alarm {
   id: number;
   alarm_time: string;
+  end_time: string | null;
   alarm_type: string | null;
   location: string | null;
   description: string | null;
@@ -69,11 +70,31 @@ export default function Alarmy() {
   // Form state for adding/editing alarm
   const [formData, setFormData] = useState({
     alarm_time: "",
+    end_time: "",
     alarm_type: "",
     location: "",
     description: "",
     vehicle_id: "",
   });
+
+  // Format date to MySQL format (YYYY-MM-DD HH:MM:SS)
+  const formatDateToMySQL = (dateString: string): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  // Format date to YYYY-MM-DD (remove time)
+function formatDate(dateString: string): string {
+  if (!dateString) return "";
+  return dateString.split('T')[0];
+}
 
   // Fetch vehicles
   const fetchVehicles = async () => {
@@ -213,6 +234,7 @@ export default function Alarmy() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           alarm_time: formData.alarm_time,
+          end_time: formData.end_time ? formatDateToMySQL(formData.end_time) : null,
           alarm_type: formData.alarm_type || null,
           location: formData.location || null,
           description: formData.description || null,
@@ -223,7 +245,7 @@ export default function Alarmy() {
       if (res.ok) {
         Alert.alert("Sukces", "Alarm dodany");
         setShowAddModal(false);
-        setFormData({ alarm_time: "", alarm_type: "", location: "", description: "", vehicle_id: "" });
+        setFormData({ alarm_time: "", end_time: "", alarm_type: "", location: "", description: "", vehicle_id: "" });
         fetchAlarms();
       } else {
         Alert.alert("Błąd", "Nie udało się dodać alarmu");
@@ -247,6 +269,7 @@ export default function Alarmy() {
           location: formData.location || null,
           description: formData.description || null,
           vehicle_id: formData.vehicle_id ? parseInt(formData.vehicle_id) : null,
+          end_time: formData.end_time ? formatDateToMySQL(formData.end_time) : null,
         }),
       });
 
@@ -303,6 +326,7 @@ export default function Alarmy() {
     setSelectedAlarm(alarm);
     setFormData({
       alarm_time: alarm.alarm_time || "",
+      end_time: alarm.end_time || "",
       alarm_type: alarm.alarm_type || "",
       location: alarm.location || "",
       description: alarm.description || "",
@@ -348,7 +372,7 @@ export default function Alarmy() {
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => {
-              setFormData({ alarm_time: "", alarm_type: "", location: "", description: "", vehicle_id: "" });
+              setFormData({ alarm_time: "", end_time: "", alarm_type: "", location: "", description: "", vehicle_id: "" });
               setShowAddModal(true);
             }}
           >
@@ -416,6 +440,17 @@ export default function Alarmy() {
                 value={formData.alarm_time}
                 onChangeText={(text) =>
                   setFormData({ ...formData, alarm_time: text })
+                }
+              />
+
+              <Text style={styles.inputLabel}>Czas zakończenia (YYYY-MM-DD HH:MM:SS)</Text>
+              <TextInput
+                placeholder="2024-12-08 16:00:00"
+                style={styles.input}
+                placeholderTextColor={colors.textMuted}
+                value={formatDate(formData.end_time)}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, end_time: text })
                 }
               />
 
@@ -517,6 +552,15 @@ export default function Alarmy() {
                       {formatDateTime(selectedAlarm.alarm_time)}
                     </Text>
                   </View>
+
+                  {selectedAlarm.end_time && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Czas zakończenia:</Text>
+                      <Text style={styles.detailValue}>
+                        {formatDateTime(selectedAlarm.end_time)}
+                      </Text>
+                    </View>
+                  )}
 
                   <Text style={styles.inputLabel}>Rodzaj alarmu</Text>
                   <TextInput

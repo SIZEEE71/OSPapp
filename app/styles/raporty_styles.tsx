@@ -242,6 +242,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
+  downloadBtn: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  downloadBtnText: {
+    color: "white",
+    fontWeight: "600",
+  },
   alarmOption: {
     backgroundColor: colors.surface,
     borderRadius: 10,
