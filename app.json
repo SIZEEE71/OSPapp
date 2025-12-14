@@ -26,6 +26,7 @@
         "ACCESS_COARSE_LOCATION",
         "READ_PHONE_STATE",
         "READ_PHONE_NUMBERS",
+        "READ_CALL_LOG",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "CALL_PHONE",
@@ -68,7 +69,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "./plugins/withCallDetection"
     ],
     "experiments": {
       "typedRoutes": true,

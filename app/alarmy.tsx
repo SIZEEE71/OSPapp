@@ -13,7 +13,9 @@ import {
   View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import ActiveAlarmBanner from "./components/ActiveAlarmBanner";
 import SelectField from "./components/SelectField";
+import { useAlarmContext } from "./context/AlarmContext";
 import styles from "./styles/alarmy_styles";
 import colors from "./theme";
 
@@ -55,6 +57,7 @@ interface CrewMember {
 export default function Alarmy() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { activeAlarm } = useAlarmContext();
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [firefighters, setFirefighters] = useState<Firefighter[]>([]);
@@ -380,6 +383,8 @@ function formatDate(dateString: string): string {
           </TouchableOpacity>
         </View>
       </View>
+
+      {activeAlarm && <ActiveAlarmBanner />}
 
       {/* Content */}
       {loading ? (

@@ -54,6 +54,11 @@ export const API_ENDPOINTS = {
   notifications: {
     get: (firefighterId: number) => `${API_BASE_URL}/notifications/${firefighterId}`,
   },
+  alarmResponse: {
+    trigger: `${API_BASE_URL}/alarm-response/trigger`,
+    respond: (alarmId: number) => `${API_BASE_URL}/alarm-response/${alarmId}/respond`,
+    stats: (alarmId: number) => `${API_BASE_URL}/alarm-response/${alarmId}/stats`,
+  },
 };
 
 export const OSRM = {

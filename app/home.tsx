@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { BackHandler, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAlarmContext } from "./context/AlarmContext";
 import { useLocationTracking } from "./hooks/useLocationTracking";
 import styles from "./styles/home_styles";
 import colors from "./theme";
@@ -11,11 +12,12 @@ export default function Home() {
   const { firefighterId } = useLocalSearchParams() as { firefighterId?: string };
   const [firefighterName, setFirefighterName] = useState<string | null>(null);
   const [firefighterSurname, setFirefighterSurname] = useState<string | null>(null);
+  const { shouldShareLocation } = useAlarmContext();
 
   // Track location for this firefighter
   useLocationTracking({
     firefighterId: firefighterId ? parseInt(firefighterId, 10) : 0,
-    enabled: !!firefighterId,
+    enabled: !!firefighterId && shouldShareLocation,
   });
 
   useEffect(() => {

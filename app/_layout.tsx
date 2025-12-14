@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AlarmProvider } from "./context/AlarmContext";
 import colors from "./theme";
 
 const APP_NAME = "OSP Mobilny";
@@ -16,15 +17,17 @@ function LayoutHeader() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <LayoutHeader />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      />
-    </SafeAreaView>
+    <AlarmProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <LayoutHeader />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        />
+      </SafeAreaView>
+    </AlarmProvider>
   );
 }
 
