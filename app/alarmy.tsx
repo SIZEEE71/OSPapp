@@ -191,7 +191,10 @@ function formatDate(dateString: string): string {
       const res = await fetch(`${API_BASE}/alarms`);
       const text = await res.text();
       const data = JSON.parse(text);
-      setAlarms(Array.isArray(data) ? data : []);
+      const sortedData = Array.isArray(data)
+        ? data.sort((a, b) => new Date(b.alarm_time).getTime() - new Date(a.alarm_time).getTime())
+        : [];
+      setAlarms(sortedData);
     } catch (error) {
       console.error("Error fetching alarms:", error);
       Alert.alert("Błąd", "Nie udało się pobrać alarmów");
@@ -349,6 +352,9 @@ function formatDate(dateString: string): string {
         <Text style={styles.alarmTime}>{formatDateTime(item.alarm_time)}</Text>
         {item.alarm_type && <Text style={styles.alarmType}>{item.alarm_type}</Text>}
       </View>
+      {item.end_time && (
+        <Text style={styles.alarmTime}>✓ Zakończono: {formatDateTime(item.end_time)}</Text>
+      )}
       {item.location && (
         <Text style={styles.alarmLocation}>📍 {item.location}</Text>
       )}

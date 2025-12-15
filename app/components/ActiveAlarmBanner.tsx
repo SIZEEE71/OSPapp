@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import colors from '../theme';
-import { useAlarmContext } from '../context/AlarmContext';
 import { API_ENDPOINTS } from '../config/api';
+import { useAlarmContext } from '../context/AlarmContext';
+import colors from '../theme';
 
 interface AlarmSummary {
   confirmed: number;
@@ -27,10 +27,11 @@ const formatTime = (value?: string) => {
 };
 
 const ActiveAlarmBanner: React.FC = () => {
-  const { activeAlarm } = useAlarmContext();
+  const { activeAlarm, dismissAlarm } = useAlarmContext();
   const [summary, setSummary] = useState<AlarmSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [isEnding, setIsEnding] = useState(false);
 
   const alarmId = activeAlarm?.id;
 
@@ -79,6 +80,38 @@ const ActiveAlarmBanner: React.FC = () => {
     return activeAlarm.status === 'responded' ? 'Odpowiedź wysłana' : 'Oczekiwanie na odpowiedź';
   }, [activeAlarm]);
 
+  const handleEndAlarm = useCallback(async () => {
+    if (!alarmId) return;
+    try {
+      setIsEnding(true);
+      const now = new Date();
+      // Format as MySQL datetime in LOCAL timezone (not UTC)
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      const endTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      
+      const response = await fetch(API_ENDPOINTS.alarms.update(alarmId), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ end_time: endTime }),
+      });
+      if (response.ok) {
+        console.log('Alarm ended with time:', endTime);
+        dismissAlarm();
+      } else {
+        console.error('Failed to end alarm, response status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error ending alarm:', error);
+    } finally {
+      setIsEnding(false);
+    }
+  }, [alarmId, dismissAlarm]);
+
   if (!activeAlarm) {
     return null;
   }
@@ -125,6 +158,18 @@ const ActiveAlarmBanner: React.FC = () => {
           <Text style={styles.refreshText}>Odśwież</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={[styles.endAlarmBtn, { opacity: isEnding ? 0.5 : 1 }]}
+        onPress={handleEndAlarm}
+        disabled={isEnding}
+      >
+        {isEnding ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.endAlarmBtnText}>Zakończyć alarm</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -219,6 +264,20 @@ const styles = StyleSheet.create({
   updatedText: {
     fontSize: 12,
     color: colors.textMuted,
+  },
+  endAlarmBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  endAlarmBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
 

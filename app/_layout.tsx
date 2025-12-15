@@ -1,11 +1,22 @@
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AlarmProvider } from "./context/AlarmContext";
 import colors from "./theme";
 
 const APP_NAME = "OSP Mobilny";
+
+// Set notification handler - SILENT
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 function LayoutHeader() {
   return (
@@ -16,6 +27,14 @@ function LayoutHeader() {
 }
 
 export default function RootLayout() {
+  // Request notification permissions on mount
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      console.log('Notification permissions:', status);
+    })();
+  }, []);
+
   return (
     <AlarmProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>

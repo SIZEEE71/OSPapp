@@ -1,13 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    BackHandler,
-    RefreshControl,
-    SectionList,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  BackHandler,
+  Modal,
+  RefreshControl,
+  SectionList,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
@@ -69,6 +70,10 @@ export default function Powiadomienia() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCrewModal, setShowCrewModal] = useState(false);
+  const [selectedAlarmId, setSelectedAlarmId] = useState<number | null>(null);
+  const [crewList, setCrewList] = useState<Array<{ id: number; name: string; surname: string; response_type: string }>>([]);
+  const [crewLoading, setCrewLoading] = useState(false);
 
   // Fetch notifications
   const fetchNotifications = useCallback(async (showLoader = true) => {
@@ -108,6 +113,31 @@ export default function Powiadomienia() {
       console.error("Error fetching firefighter:", err);
     }
   }, [firefighterId]);
+
+  // Fetch crew responses for alarm
+  const fetchCrewResponses = useCallback(async (alarmId: number) => {
+    try {
+      setCrewLoading(true);
+      const response = await fetch(`http://qubis.pl:4000/api/alarm-response/${alarmId}/stats`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch crew responses: ${response.status}`);
+      }
+      const data = await response.json();
+      const responses = data.responses || [];
+      setCrewList(Array.isArray(responses) ? responses : []);
+    } catch (err) {
+      console.error("Error fetching crew responses:", err);
+      setCrewList([]);
+    } finally {
+      setCrewLoading(false);
+    }
+  }, []);
+
+  const openCrewModal = (alarmId: number) => {
+    setSelectedAlarmId(alarmId);
+    setShowCrewModal(true);
+    fetchCrewResponses(alarmId);
+  };
 
   useEffect(() => {
     fetchFirefighter();
@@ -155,21 +185,22 @@ export default function Powiadomienia() {
 
   // Render past alarm
   const renderPastAlarm = ({ item }: { item: PastAlarm }) => (
-    <TouchableOpacity
-      style={styles.notificationCard}
-      onPress={() => router.push(`/alarmy`)}
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.alarm_type || "Alarm"}</Text>
-        <Text style={styles.cardDate}>{formatDateTime(item.alarm_time)}</Text>
-      </View>
-      <Text style={styles.cardLocation}>📍 {item.location || "Nieznana lokalizacja"}</Text>
-      {item.description && <Text style={styles.cardDescription}>{item.description}</Text>}
+    <View style={styles.notificationCard}>
+      <TouchableOpacity onPress={() => router.push(`/alarmy`)}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{item.alarm_type || "Alarm"}</Text>
+          <Text style={styles.cardDate}>{formatDateTime(item.alarm_time)}</Text>
+        </View>
+        <Text style={styles.cardLocation}>📍 {item.location || "Nieznana lokalizacja"}</Text>
+        {item.description && <Text style={styles.cardDescription}>{item.description}</Text>}
+      </TouchableOpacity>
       <View style={styles.cardFooter}>
-        <Text style={styles.cardMeta}>👥 {item.crew_count} strażaków</Text>
+        <TouchableOpacity onPress={() => openCrewModal(item.id)}>
+          <Text style={styles.cardMeta}>👥 {item.crew_count} strażaków</Text>
+        </TouchableOpacity>
         {item.end_time && <Text style={styles.cardMeta}>✓ Zakończony</Text>}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   // Render expiring training
@@ -361,6 +392,54 @@ export default function Powiadomienia() {
           }
         />
       )}
+
+      {/* Crew Modal */}
+      <Modal
+        visible={showCrewModal}
+        animationType="slide"
+        transparent
+        presentationStyle="overFullScreen"
+        onDismiss={() => setShowCrewModal(false)}
+        onRequestClose={() => setShowCrewModal(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowCrewModal(false)}>
+                <Text style={styles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Odpowiedzi strażaków</Text>
+              <View style={{ width: 30 }} />
+            </View>
+
+            {crewLoading ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+            ) : crewList.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Brak odpowiedzi</Text>
+              </View>
+            ) : (
+              <View style={styles.modalContent}>
+                {crewList.map((member, index) => (
+                  <View key={`${member.id || index}`} style={styles.crewMemberItem}>
+                    <Text style={styles.crewMemberName}>
+                      {member.name} {member.surname}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.crewMemberResponse,
+                        { color: member.response_type === 'TAK' ? '#4CAF50' : '#FF6B6B' }
+                      ]}
+                    >
+                      {member.response_type === 'TAK' ? '✓ TAK' : '✗ NIE'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

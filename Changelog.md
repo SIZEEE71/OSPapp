@@ -148,6 +148,65 @@
 ### TODO
 - Alarmowanie
 
+## [0.9.0] - 15.12.2025
+### Systemu Alarmowania (Call Detection & Notifications)
+#### Native Module - CallDetectorModule.java
+- Implementacja CallDetectorModule do monitorowania stanu telefonii
+- `onHostResume()` - sprawdzenie intent alarmu przy wznowieniu aplikacji
+- `checkIntentAlarm()` - RN bridge do sprawdzania alertu z widoku
+- RINGING event emitowany do React Native'a z numerem i czasem
+
+#### BroadcastReceiver - PhoneStateReceiver.java
+- Nowy BroadcastReceiver do detekcji przychodzących połączeń
+- Wysyłanie intent z alarm_triggered, phone_number, timestamp
+- Flagi background: FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS, FLAG_ACTIVITY_NO_ANIMATION (nie pokazuje app na ekranie)
+
+#### AlarmContext - Polling & State Management
+- Polling system co 5 sekund szukający aktywnych alarmów na backendzie
+- Automatyczne ładowanie alarmu jeśli brakuje incoming call (np. użytkownik bez zasięgu)
+- `scheduleNotification()` - powiadomienie sticky bez dźwięku/wibracji
+- `respondToAlarm()` - wysłanie odpowiedzi (TAK/NIE) i aktualizacja notificacji
+
+#### Notification Handler (_layout.tsx)
+- `setNotificationHandler` ustawiony na: shouldPlaySound=false, shouldSetBadge=false
+- Wszystkie notyfikacje bezdźwięczne i bez badge'a
+
+#### Alarmy.tsx
+- Dodano wyświetlanie end_time w liście: "✓ Zakończono: [data godzina]"
+- Formatowanie czasu lokalnego w liście
+
+
+#### ActiveAlarmBanner.tsx
+- Naprawiony timezone problem w `handleEndAlarm()`
+- Wyświetlanie statystyk: TAK/NIE/Łącznie
+
+### Mapa (Map Improvements)
+#### Nearest Firefighters List
+- Nowa sekcja na dole mapy "Najbliżsi strażacy" (sticky, left bottom)
+- Haversine formula do obliczania odległości
+- Wyświetlanie: Imię Nazwisko + odległość do remizy (w km)
+- Sortowanie od najbliżej do remizy
+- Top 3-4 strażaków
+- Widoczne TYLKO podczas aktywnego alarmu
+
+#### Map JavaScript Updates
+- `updateNearestList()` funkcja z kalkulacją odległości
+- `hasActiveAlarm` flag z React Native
+- Dynamiczne ukrywanie listy gdy brak alarmu (display: none)
+
+#### Filtering & Confirmed Firefighters
+- Filtracja strażaków na mapie: jeśli alarm aktywny - pokaż TYLKO potwierdzonych (response_type='TAK')
+- Jeśli brak alarmu - pokaż tylko zalogowanego użytkownika
+
+### Architecture
+- Alarm system obsługuje TRZY scenariusze:
+  1. **A dostaje incoming call** → trigger alarm + widzi aktywny
+  2. **B bez zasięgu** → polling znajduje alarm → widzi aktywny
+  3. **C też dostaje incoming call** → debounce (7s) zapobiega duplikacji
+- Wszystkie 3 osoby widzą "TRWAJĄCY ALARM" niezależnie od call detection
+
+
+
 
 
 

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { BackHandler, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -19,6 +20,16 @@ export default function Home() {
     firefighterId: firefighterId ? parseInt(firefighterId, 10) : 0,
     enabled: !!firefighterId && shouldShareLocation,
   });
+
+  // Save firefighterId to AsyncStorage when user logs in
+  useEffect(() => {
+    if (firefighterId) {
+      AsyncStorage.setItem('activeFirefighterId', firefighterId).catch(err =>
+        console.warn('Failed to save firefighterId:', err)
+      );
+    }
+  }, [firefighterId]);
+
 
   useEffect(() => {
     let mounted = true;

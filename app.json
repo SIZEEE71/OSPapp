@@ -46,6 +46,40 @@
     "plugins": [
       "expo-router",
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableJetifier": true,
+            "packagingOptions": {
+              "pickFirst": [
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module",
+                "META-INF/androidx.customview_customview.version",
+                "META-INF/androidx.cardview_cardview.version",
+                "META-INF/androidx.coordinatorlayout_coordinatorlayout.version",
+                "META-INF/androidx.legacy_legacy-support-core-ui.version",
+                "META-INF/androidx.legacy_legacy-support-core-utils.version",
+                "META-INF/androidx.fragment_fragment.version",
+                "META-INF/androidx.loader_loader.version",
+                "META-INF/androidx.appcompat_appcompat.version",
+                "META-INF/androidx.vectordrawable_vectordrawable.version",
+                "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version",
+                "META-INF/androidx.drawerlayout_drawerlayout.version",
+                "META-INF/androidx.viewpager_viewpager.version",
+                "META-INF/androidx.versionedparcelable_versionedparcelable.version"
+              ]
+            }
+          }
+        }
+      ],
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Aplikacja OSP wymaga dostępu do lokalizacji w celu śledzenia pozycji strażaków podczas działań."
@@ -70,7 +104,8 @@
           }
         }
       ],
-      "./plugins/withCallDetection"
+      "./plugins/withCallDetection",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

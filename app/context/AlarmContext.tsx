@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Voice, { SpeechErrorEvent, SpeechResultsEvent } from '@react-native-voice/voice';
+import Voice from '@react-native-voice/voice';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
 import { Alert, Platform } from 'react-native';
 import AlarmOverlay from '../components/AlarmOverlay';
@@ -76,8 +76,98 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const autoDeclineTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notificationIdRef = useRef<string | null>(null);
+  const notificationRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTriggerRef = useRef<number>(0);
   const voiceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Set up background notification task
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('📬 Notification response received:', response);
+      // User tapped on notification - could navigate to alarm confirmation
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // Check for intent alarm when app starts (from PhoneStateReceiver)
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+
+    let isMounted = true;
+    const checkIntentAlarm = async () => {
+      try {
+        const { NativeModules } = require('react-native');
+        const CallDetector = NativeModules.CallDetector;
+        if (!CallDetector?.checkIntentAlarm) {
+          return;
+        }
+        
+        const alarmData = await CallDetector.checkIntentAlarm();
+        if (isMounted && alarmData) {
+          console.log('🚨 Intent alarm detected:', alarmData);
+          // Wyzwól alarm z danych z intentu
+          handleAlarmDetected({
+            phoneNumber: alarmData.phoneNumber,
+            detectedAt: alarmData.detectedAt || Date.now(),
+          });
+        }
+      } catch (error) {
+        console.warn('Error checking intent alarm:', error);
+      }
+    };
+
+    // Sprawdzaj intent na start
+    const timeoutId = setTimeout(checkIntentAlarm, 500);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  // Polling: check for active alarms every 5 seconds (for users without incoming call event)
+  useEffect(() => {
+    if (!activeAlarm) {
+      const pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(API_ENDPOINTS.alarms.list());
+          const alarms = await res.json();
+          
+          if (Array.isArray(alarms) && alarms.length > 0) {
+            // Find most recent active alarm (end_time is null AND alarm_time is in past)
+            const now = Date.now();
+            const activeAlarms = alarms.filter((a: any) => {
+              const alarmTime = new Date(a.alarm_time).getTime();
+              return !a.end_time && alarmTime <= now;
+            });
+
+            if (activeAlarms.length > 0) {
+              const mostRecent = activeAlarms.reduce((latest: any, current: any) =>
+                new Date(current.alarm_time).getTime() > new Date(latest.alarm_time).getTime() ? current : latest
+              );
+              
+              console.log('📡 Polling found active alarm:', mostRecent.id);
+              // Set as active alarm
+              setActiveAlarm({
+                id: mostRecent.id,
+                callNumber: mostRecent.call_phone_number,
+                startedAt: mostRecent.alarm_time,
+                expiresAt: Date.now() + FIVE_MINUTES_MS,
+                status: 'awaiting_response',
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('Polling error:', error);
+        }
+      }, 5000); // Poll every 5 seconds
+
+      return () => clearInterval(pollInterval);
+    }
+  }, [activeAlarm]);
 
   const clearTimers = useCallback(() => {
     if (countdownIntervalRef.current) {
@@ -87,6 +177,10 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     if (autoDeclineTimeoutRef.current) {
       clearTimeout(autoDeclineTimeoutRef.current);
       autoDeclineTimeoutRef.current = null;
+    }
+    if (notificationRefreshIntervalRef.current) {
+      clearInterval(notificationRefreshIntervalRef.current);
+      notificationRefreshIntervalRef.current = null;
     }
   }, []);
 
@@ -117,49 +211,14 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     }
   }, [clearVoiceTimeout, isVoiceListening]);
 
-  const startVoiceCapture = useCallback(async () => {
-    if (Platform.OS !== 'android') {
-      return;
-    }
-    try {
-      await stopVoiceCapture();
-      await Voice.start(VOICE_LOCALE);
-      setIsVoiceListening(true);
-      clearVoiceTimeout();
-      voiceTimeoutRef.current = setTimeout(() => {
-        stopVoiceCapture();
-      }, VOICE_TIMEOUT_MS) as unknown as NodeJS.Timeout;
-    } catch (error) {
-      console.warn('Voice start error', error);
-      setIsVoiceListening(false);
-    }
-  }, [clearVoiceTimeout, stopVoiceCapture]);
-
-  const scheduleNotification = useCallback(async () => {
-    try {
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Trwający alarm',
-          body: 'Potwierdź udział w alarmie.',
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-        },
-        trigger: null,
-      });
-      notificationIdRef.current = id;
-    } catch (error) {
-      console.warn('Alarm notification error', error);
-    }
-  }, []);
-
   const clearNotification = useCallback(async () => {
     try {
       if (notificationIdRef.current) {
         await Notifications.dismissNotificationAsync(notificationIdRef.current);
         notificationIdRef.current = null;
-      } else {
-        await Notifications.dismissAllNotificationsAsync();
       }
+      // Cancel all scheduled notifications to ensure none repeat
+      await Notifications.cancelAllScheduledNotificationsAsync();
     } catch (error) {
       console.warn('Dismiss notification error', error);
     }
@@ -197,11 +256,35 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
           throw new Error('Network response was not ok');
         }
 
-        setActiveAlarm((prev) => (prev ? { ...prev, status: 'responded', lastResponse: responseType } : prev));
         await stopVoiceCapture();
-        clearNotification();
-        clearTimers();
         Speech.stop();
+        
+        // Clear refresh interval completely
+        if (notificationRefreshIntervalRef.current) {
+          clearInterval(notificationRefreshIntervalRef.current);
+          notificationRefreshIntervalRef.current = null;
+        }
+        
+        // Update alarm status - this will prevent scheduleNotification from running
+        setActiveAlarm((prev) => (prev ? { ...prev, status: 'responded', lastResponse: responseType } : prev));
+        
+        // Send updated sticky notification showing the response
+        try {
+          console.log('📢 Showing response notification');
+          const responseText = responseType === 'TAK' ? '✅ POTWIERDZONO' : '❌ ODRZUCONO';
+          const id = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '🚨 TRWAJĄCY ALARM',
+              body: responseText,
+              sticky: true,
+            },
+            trigger: null, // Send immediately
+          });
+          notificationIdRef.current = id;
+          console.log('✅ Response notification sent:', id);
+        } catch (e) {
+          console.warn('Error sending response notification:', e);
+        }
       } catch (error) {
         console.error('Error sending alarm response:', error);
         if (!silent) {
@@ -211,8 +294,61 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
         setIsResponding(false);
       }
     },
-    [activeAlarm, clearNotification, clearTimers, stopVoiceCapture]
+    [activeAlarm, stopVoiceCapture]
   );
+
+  const startVoiceCapture = useCallback(async () => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+    try {
+      // Voice module may not be available on all setups
+      // Try to use it, but don't fail if it's not available
+      if (!Voice || !Voice.start) {
+        console.warn('Voice module not available, skipping voice capture');
+        setIsVoiceListening(false);
+        return;
+      }
+      
+      await stopVoiceCapture();
+      await Voice.start(VOICE_LOCALE);
+      setIsVoiceListening(true);
+      clearVoiceTimeout();
+      voiceTimeoutRef.current = setTimeout(() => {
+        stopVoiceCapture();
+      }, VOICE_TIMEOUT_MS) as unknown as NodeJS.Timeout;
+    } catch (error) {
+      console.warn('Voice start error:', error);
+      setIsVoiceListening(false);
+    }
+  }, [clearVoiceTimeout, stopVoiceCapture]);
+
+  const scheduleNotification = useCallback(async () => {
+    try {
+      // Don't dismiss previous - we want it to stay in notification center!
+      
+      // If already responded, don't schedule more notifications
+      if (activeAlarm?.status === 'responded') {
+        console.log('🔕 Alarm already responded, skipping notification');
+        return;
+      }
+      
+      console.log('📢 Scheduling SILENT alarm notification');
+      // Schedule SILENT notification that stays in notification center
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🚨 TRWAJĄCY ALARM',
+          body: 'Potwierdź udział w alarmie. Kliknij aby odpowiedzieć.',
+          sticky: true,
+        },
+        trigger: null, // Send immediately to ensure it appears
+      });
+      notificationIdRef.current = id;
+      console.log('✅ Notification scheduled with ID:', id);
+    } catch (error) {
+      console.warn('Alarm notification error', error);
+    }
+  }, [activeAlarm]);
 
   const handleAlarmDetected = useCallback(
     async ({ phoneNumber, detectedAt }: { phoneNumber?: string; detectedAt: number }) => {
@@ -226,19 +362,28 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
         const payload = {
           call_phone_number: phoneNumber ?? TARGET_PHONE_NUMBER,
           alarm_time: new Date(detectedAt).toISOString(),
+          end_time: new Date(detectedAt + FIVE_MINUTES_MS).toISOString(), // Auto-end after 5 minutes
         };
 
+        console.log('🚨 Triggering alarm with payload:', payload);
+        
         const response = await fetch(API_ENDPOINTS.alarmResponse.trigger, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
+        console.log('📡 Alarm trigger response status:', response.status);
+        
         if (!response.ok) {
-          throw new Error('Failed to create alarm');
+          const errorText = await response.text();
+          console.error('❌ Alarm trigger error response:', errorText);
+          throw new Error(`Failed to create alarm: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log('✅ Alarm created:', data);
+        
         setActiveAlarm({
           id: data.alarmId,
           callNumber: data.call_phone_number,
@@ -247,7 +392,7 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
           status: 'awaiting_response',
         });
       } catch (error) {
-        console.error('Alarm trigger failed:', error);
+        console.error('❌ Alarm trigger failed:', error);
       }
     },
     []
@@ -258,32 +403,11 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
       return;
     }
 
-    const handleSpeechResults = (event: SpeechResultsEvent) => {
-      const phrases = event.value ?? [];
-      for (const phrase of phrases) {
-        const detected = detectResponseFromSpeech(phrase);
-        if (detected) {
-          stopVoiceCapture();
-          respondToAlarm(detected, false);
-          break;
-        }
-      }
-    };
-
-    const handleSpeechError = (event: SpeechErrorEvent) => {
-      console.warn('Voice recognition error', event.error);
-      stopVoiceCapture();
-    };
-
-    Voice.onSpeechResults = handleSpeechResults;
-    Voice.onSpeechPartialResults = handleSpeechResults;
-    Voice.onSpeechError = handleSpeechError;
-
     return () => {
       stopVoiceCapture();
       Voice.destroy().then(Voice.removeAllListeners).catch(() => undefined);
     };
-  }, [respondToAlarm, stopVoiceCapture]);
+  }, [stopVoiceCapture]);
 
   useCallDetection({
     enabled: Platform.OS === 'android' && !activeAlarm,
@@ -292,29 +416,36 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   });
 
   useEffect(() => {
-    if (activeAlarm?.status === 'awaiting_response') {
-      setOverlayCountdown(DEFAULT_COUNTDOWN);
-      clearTimers();
-      Speech.stop();
-      Speech.speak('Czy bierzesz udział w alarmie?', {
-        language: 'pl-PL',
-        rate: 0.92,
-        pitch: 1.0,
-      });
-      scheduleNotification();
-      startVoiceCapture();
+    const initializeAlarm = async () => {
+      if (activeAlarm?.status === 'awaiting_response') {
+        setOverlayCountdown(DEFAULT_COUNTDOWN);
+        clearTimers();
+        Speech.stop();
+        Speech.speak('Czy bierzesz udział w alarmie?', {
+          language: 'pl-PL',
+          rate: 0.92,
+          pitch: 1.0,
+        });
+        
+        // Send notification once (silent, no refresh)
+        await scheduleNotification();
+        
+        startVoiceCapture();
 
-      countdownIntervalRef.current = setInterval(() => {
-        setOverlayCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000) as unknown as NodeJS.Timeout;    
+        countdownIntervalRef.current = setInterval(() => {
+          setOverlayCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+        }, 1000) as unknown as NodeJS.Timeout;    
 
-      autoDeclineTimeoutRef.current = setTimeout(() => {
-        respondToAlarm('NIE', true);
-      }, DEFAULT_COUNTDOWN * 1000) as unknown as NodeJS.Timeout;
-    } else {
-      clearTimers();
-      stopVoiceCapture();
-    }
+        autoDeclineTimeoutRef.current = setTimeout(() => {
+          respondToAlarm('NIE', true);
+        }, DEFAULT_COUNTDOWN * 1000) as unknown as NodeJS.Timeout;
+      } else {
+        clearTimers();
+        stopVoiceCapture();
+      }
+    };
+
+    initializeAlarm();
 
     return () => {
       if (!activeAlarm) {
@@ -322,7 +453,7 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
         stopVoiceCapture();
       }
     };
-  }, [activeAlarm, clearTimers, respondToAlarm, scheduleNotification, startVoiceCapture, stopVoiceCapture]);
+  }, [activeAlarm, clearTimers, respondToAlarm, startVoiceCapture, stopVoiceCapture, scheduleNotification]);
 
   useEffect(() => {
     if (!activeAlarm) {

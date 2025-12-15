@@ -19,6 +19,8 @@ src/
 *.key
 *.mobileprovision
 
+.expo/
+
 # Metro
 .metro-health-check*
 

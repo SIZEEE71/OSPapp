@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAlarmContext } from '../context/AlarmContext';
 import colors from '../theme';

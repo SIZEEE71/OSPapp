@@ -180,6 +180,59 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 12,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceDivider,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  modalCloseButton: {
+    fontSize: 24,
+    color: colors.text,
+    fontWeight: "600",
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  crewMemberItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  crewMemberName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+    flex: 1,
+  },
+  crewMemberResponse: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
 });
 
 export default styles;

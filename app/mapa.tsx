@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { BackHandler, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { API_ENDPOINTS } from "./config/api";
+import { useAlarmContext } from "./context/AlarmContext";
 import styles from "./styles/mapa_styles";
 
 const POLL_INTERVAL_MS = 5000; // 5 seconds
@@ -160,12 +161,46 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
       background: #20c997;
     }
 
-    .firefighter-marker {
-      pointer-events: auto !important;
+    #nearestList {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-height: 200px;
+      overflow-y: auto;
+      border: 2px solid #007bff;
     }
 
-    .firefighter-marker div {
-      transform: scale(1) !important;
+    .nearest-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .nearest-item {
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .nearest-name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .nearest-distance {
+      color: #666;
+      font-size: 12px;
     }
 
     .leaflet-zoom-animated .firefighter-marker div {
@@ -181,6 +216,10 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     <button id="clearRouteBtn">Wyczyść trasę</button>
   </div>
   <button id="hydrantButton" title="Hydranty">💧</button>
+  <div id="nearestList">
+    <div class="nearest-header">Najbliżsi strażacy:</div>
+    <div id="nearestItems"></div>
+  </div>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -198,7 +237,58 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     let searchMarker = null;
     let hydrantMarkers = [];
     let hydrantsVisible = false;
+    let hasActiveAlarm = false;
+    let remotezyLat = 49.742863;
+    let remotezyLng = 20.627574;
 
+
+    // Calculate distance between two coordinates (Haversine formula)
+    function getDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    }
+
+    // Update nearest firefighters list (to remotezy, only if alarm active)
+    function updateNearestList(allFirefighters) {
+      const listContainer = document.getElementById('nearestList');
+      if (!listContainer) return;
+      
+      // Hide if no active alarm
+      if (!hasActiveAlarm) {
+        listContainer.style.display = 'none';
+        return;
+      }
+
+      // Calculate distances to remotezy for all firefighters
+      const firefightersWithDistance = allFirefighters.map(loc => ({
+        ...loc,
+        distance: getDistance(loc.lat, loc.lng, remotezyLat, remotezyLng)
+      }));
+
+      // Sort by distance and get top 4
+      const nearest = firefightersWithDistance
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 4);
+
+      // Render list
+      const itemsContainer = document.getElementById('nearestItems');
+      if (!itemsContainer) return;
+      
+      itemsContainer.innerHTML = nearest.map(f =>
+        '<div class="nearest-item">' +
+          '<div class="nearest-name">' + (f.firefighterName || '?') + ' ' + (f.firefighterSurname || '') + '</div>' +
+          '<div class="nearest-distance">🚒 ' + f.distance.toFixed(2) + ' km do remotezy</div>' +
+        '</div>'
+      ).join('');
+      
+      listContainer.style.display = 'block';
+    }
 
     // Function to fetch hydrants from Overpass API
     async function fetchHydrants() {
@@ -459,11 +549,18 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
       try {
         const msg = JSON.parse(data);
         if (msg.type === 'updateFirefighters') {
+          // Update active alarm status and remotezy coordinates
+          hasActiveAlarm = msg.hasActiveAlarm || false;
+          if (msg.remotezyLat) remotezyLat = msg.remotezyLat;
+          if (msg.remotezyLng) remotezyLng = msg.remotezyLng;
+          
           // Update all firefighter locations
           msg.locations.forEach(function(loc) {
             var isCurrentUser = msg.currentFirefighterId && loc.firefighter_id === msg.currentFirefighterId;
             updateFirefighterMarker(loc.firefighter_id, loc.lat, loc.lng, loc.firefighterName, loc.firefighterSurname, isCurrentUser);
           });
+          // Update nearest list
+          updateNearestList(msg.locations);
         }
       } catch(e) {}
     }
@@ -482,6 +579,41 @@ export default function Mapa() {
   const [isWebViewReady, setIsWebViewReady] = useState(false);
   const pendingLocationsRef = useRef<FirefighterLocation[] | null>(null);
   const [firefighters, setFirefighters] = useState<Firefighter[]>([]);
+  const { activeAlarm } = useAlarmContext();
+  const [confirmedFirefighterIds, setConfirmedFirefighterIds] = useState<Set<number>>(new Set());
+
+  // Fetch confirmed firefighters when alarm is active
+  useEffect(() => {
+    let mounted = true;
+    
+    if (!activeAlarm) {
+      setConfirmedFirefighterIds(new Set());
+      return;
+    }
+
+    async function fetchConfirmed() {
+      try {
+        if (!activeAlarm) return;
+        const res = await fetch(`http://qubis.pl:4000/api/alarm-response/${activeAlarm.id}/stats`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const responses = data.responses || [];
+        const confirmedIds = new Set<number>(
+          responses
+            .filter((r: any) => r.response_type === 'TAK')
+            .map((r: any) => Number(r.firefighter_id))
+        );
+        if (mounted) {
+          setConfirmedFirefighterIds(confirmedIds);
+        }
+      } catch (error) {
+        console.error('Error fetching confirmed firefighters:', error);
+      }
+    }
+
+    fetchConfirmed();
+    return () => { mounted = false; };
+  }, [activeAlarm]);
 
   // Fetch firefighters list once
   useEffect(() => {
@@ -514,6 +646,16 @@ export default function Mapa() {
 
         const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
         
+        // Filtruj lokalizacje:
+        // - Jeśli jest aktywny alarm: pokaż TYLKO strażaków którzy potwierdzili (TAK)
+        // - Jeśli nie ma alarmu: pokaż tylko zalogowanego
+        let filteredLocations = locations;
+        if (activeAlarm && confirmedFirefighterIds.size > 0) {
+          filteredLocations = locations.filter(loc => confirmedFirefighterIds.has(loc.firefighter_id));
+        } else if (!activeAlarm) {
+          filteredLocations = locations.filter(loc => loc.firefighter_id === currentId);
+        }
+        
         // Ustaw początkową lokalizację na zalogowanego strażaka
         if (!initialLocation && currentId) {
           const userLocation = locations.find(loc => loc.firefighter_id === currentId);
@@ -528,7 +670,7 @@ export default function Mapa() {
         if (!webViewRef.current) return;
         
         // Połącz lokalizacje z nazwami strażaków
-        const locationsWithNames = locations.map(loc => {
+        const locationsWithNames = filteredLocations.map(loc => {
           const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
           return {
             ...loc,
@@ -541,6 +683,9 @@ export default function Mapa() {
           type: 'updateFirefighters',
           locations: locationsWithNames,
           currentFirefighterId: currentId,
+          hasActiveAlarm: !!activeAlarm,
+          remotezyLat: 49.742863,  // Coordinates of remotezy (fire station)
+          remotezyLng: 20.627574,
         });
         
         webViewRef.current.postMessage(message);
@@ -561,15 +706,21 @@ export default function Mapa() {
         pollIntervalRef.current = null;
       }
     };
-  }, [firefighterId]);
+  }, [firefighterId, activeAlarm]);
 
   // Wyślij dane do mapy gdy WebView jest gotowy
   useEffect(() => {
     if (isWebViewReady && pendingLocationsRef.current && webViewRef.current) {
       const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
       
+      // Filtruj lokalizacje: przy alarmie pokaż wszystkich, bez alarmu tylko siebie
+      let filteredLocations = pendingLocationsRef.current;
+      if (!activeAlarm) {
+        filteredLocations = filteredLocations.filter(loc => loc.firefighter_id === currentId);
+      }
+      
       // Połącz lokalizacje z nazwami strażaków
-      const locationsWithNames = pendingLocationsRef.current.map(loc => {
+      const locationsWithNames = filteredLocations.map(loc => {
         const firefighter = firefighters.find(f => f.id === loc.firefighter_id);
         return {
           ...loc,
@@ -582,12 +733,15 @@ export default function Mapa() {
         type: 'updateFirefighters',
         locations: locationsWithNames,
         currentFirefighterId: currentId,
+        hasActiveAlarm: !!activeAlarm,
+        remotezyLat: 49.742863,
+        remotezyLng: 20.627574,
       });
       
       webViewRef.current.postMessage(message);
       pendingLocationsRef.current = null;
     }
-  }, [isWebViewReady, firefighterId, firefighters]);
+  }, [isWebViewReady, firefighterId, firefighters, activeAlarm]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
