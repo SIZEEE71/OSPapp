@@ -46,10 +46,17 @@ interface VehicleInspection {
   days_until_insurance?: number;
 }
 
+interface UnpaidContribution {
+  id: number;
+  name: string;
+  surname: string;
+}
+
 interface NotificationData {
   past_alarms: PastAlarm[];
   periodic_exams: ExpiringTraining[];
   vehicle_inspections: VehicleInspection[];
+  unpaid_contributions?: UnpaidContribution[];
   all_firefighters_exams?: ExpiringTraining[];
 }
 
@@ -268,6 +275,27 @@ export default function Powiadomienia() {
     );
   };
 
+  // Render unpaid contributions
+  const renderUnpaidContribution = ({ item }: { item: UnpaidContribution }) => (
+    <TouchableOpacity
+      style={[
+        styles.notificationCard,
+        { borderLeftColor: "#FFC107", borderLeftWidth: 4 },
+      ]}
+      onPress={() => router.push(`/strazacy`)}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>💳 Nieopłacone składki</Text>
+        <Text style={[styles.cardDate, { color: "#FFC107" }]}>
+          {item.name} {item.surname}
+        </Text>
+      </View>
+      <Text style={[styles.cardDescription, { color: "#FFC107" }]}>
+        ⚠️ Prosimy o opłacenie składek
+      </Text>
+    </TouchableOpacity>
+  );
+
   // Sections for SectionList
   const sections = [];
 
@@ -284,6 +312,14 @@ export default function Powiadomienia() {
       title: "🏥 Moje badania okresowe",
       data: notifications.periodic_exams,
       renderItem: renderExpiringTraining,
+    });
+  }
+
+  if (notifications?.unpaid_contributions && notifications.unpaid_contributions.length > 0) {
+    sections.push({
+      title: "💳 Nieopłacone składki",
+      data: notifications.unpaid_contributions,
+      renderItem: renderUnpaidContribution,
     });
   }
 

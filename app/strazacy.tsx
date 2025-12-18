@@ -15,12 +15,19 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import styles from "./styles/strazacy_styles";
 import colors from "./theme";
 
-type TabType = "list" | "add" | "trainings";
+type TabType = "list" | "add" | "trainings" | "finance" | "contributions";
 type Firefighter = any;
 type Rank = any;
 type Group = any;
 type Training = any;
 type Language = any;
+type Expense = {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+};
 
 const API_BASE = "http://qubis.pl:4000/api";
 
@@ -28,6 +35,12 @@ const API_BASE = "http://qubis.pl:4000/api";
 function formatDate(dateString: string): string {
   if (!dateString) return "";
   return dateString.split('T')[0];
+}
+
+function getTodayLocalDate(): string {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offsetMs).toISOString().split('T')[0];
 }
 
 // Simple Select Component
@@ -113,6 +126,25 @@ export default function Strazacy() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showAddLanguageModal, setShowAddLanguageModal] = useState(false);
+
+  // Finance state
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [totalBudget, setTotalBudget] = useState<number>(0);
+  const [expenseForm, setExpenseForm] = useState({
+    description: "",
+    amount: "",
+    category: "Paliwo",
+    date: getTodayLocalDate(),
+  });
+
+  // Contributions state
+  const [contributionsFilter, setContributionsFilter] = useState<"all" | "unpaid" | "paid">("all");
+  const [selectedFirefighterForContribution, setSelectedFirefighterForContribution] = useState<Firefighter | null>(null);
+  const [showContributionModal, setShowContributionModal] = useState(false);
+  const [contributionForm, setContributionForm] = useState({
+    contributions_paid: false,
+    contributions_paid_date: getTodayLocalDate(),
+  });
 
   // Form states
   const [firefighterForm, setFirefighterForm] = useState({
@@ -211,12 +243,16 @@ export default function Strazacy() {
         setShowAddLanguageModal(false);
         return true;
       }
+      if (showContributionModal) {
+        setShowContributionModal(false);
+        return true;
+      }
       router.back();
       return true;
     });
 
     return () => backHandler.remove();
-  }, [showDetailsModal, showTrainingModal, showAddLanguageModal, router]);
+  }, [showDetailsModal, showTrainingModal, showAddLanguageModal, showContributionModal, router]);
 
   // Add firefighter
   const handleAddFirefighter = async () => {
@@ -370,6 +406,102 @@ export default function Strazacy() {
     fetchFirefighters(groupId || undefined);
   };
 
+  // Add expense
+  const handleAddExpense = () => {
+    if (!expenseForm.description || !expenseForm.amount) {
+      Alert.alert("Błąd", "Opis i kwota są wymagane");
+      return;
+    }
+
+    const newExpense: Expense = {
+      id: Date.now().toString(),
+      description: expenseForm.description,
+      amount: parseFloat(expenseForm.amount),
+      category: expenseForm.category,
+      date: expenseForm.date,
+    };
+
+    setExpenses([...expenses, newExpense]);
+    setExpenseForm({
+      description: "",
+      amount: "",
+      category: "Paliwo",
+      date: getTodayLocalDate(),
+    });
+    Alert.alert("Sukces", "Wydatek dodany");
+  };
+
+  // Delete expense
+  const handleDeleteExpense = (id: string) => {
+    Alert.alert("Potwierdzenie", "Na pewno usunąć ten wydatek?", [
+      { text: "Anuluj", onPress: () => {} },
+      {
+        text: "Usuń",
+        onPress: () => {
+          setExpenses(expenses.filter(e => e.id !== id));
+          Alert.alert("Sukces", "Wydatek usunięty");
+        },
+      },
+    ]);
+  };
+
+  // Calculate totals by category
+  const expensesByCategory = expenses.reduce((acc: any, expense) => {
+    if (!acc[expense.category]) {
+      acc[expense.category] = 0;
+    }
+    acc[expense.category] += expense.amount;
+    return acc;
+  }, {});
+
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Update contribution status
+  const handleUpdateContribution = async () => {
+    if (!selectedFirefighterForContribution) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/firefighters-extended/${selectedFirefighterForContribution.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contributions_paid: contributionForm.contributions_paid ? 1 : 0,
+          contributions_paid_date: contributionForm.contributions_paid ? contributionForm.contributions_paid_date : null,
+        }),
+      });
+
+      if (res.ok) {
+        Alert.alert("Sukces", "Status składek zaktualizowany");
+        setShowContributionModal(false);
+        setSelectedFirefighterForContribution(null);
+        setContributionForm({
+          contributions_paid: false,
+          contributions_paid_date: getTodayLocalDate(),
+        });
+        fetchFirefighters(selectedGroup || undefined);
+      } else {
+        Alert.alert("Błąd", "Nie udało się zaktualizować statusu");
+      }
+    } catch (error) {
+      console.error("Error updating contribution:", error);
+      Alert.alert("Błąd", "Nie udało się zaktualizować statusu");
+    }
+  };
+
+  // Filter firefighters by contribution status
+  const getFilteredFirefightersByContribution = () => {
+    const baseFiltered = selectedGroup
+      ? firefighters.filter(f => f.group_id === selectedGroup)
+      : firefighters;
+
+    if (contributionsFilter === "unpaid") {
+      return baseFiltered.filter(f => !f.contributions_paid);
+    } else if (contributionsFilter === "paid") {
+      return baseFiltered.filter(f => f.contributions_paid);
+    }
+    return baseFiltered;
+  };
+
   const filteredFirefighters = selectedGroup
     ? firefighters.filter(f => f.group_id === selectedGroup)
     : firefighters;
@@ -393,10 +525,27 @@ export default function Strazacy() {
             ➕ Dodaj
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "contributions" && styles.tabActive]}
+          onPress={() => setActiveTab("contributions")}
+        >
+          <Text style={[styles.tabText, activeTab === "contributions" && styles.tabTextActive]}>
+            💳 Składki
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "finance" && styles.tabActive]}
+          onPress={() => setActiveTab("finance")}
+        >
+          <Text style={[styles.tabText, activeTab === "finance" && styles.tabTextActive]}>
+            💰 Finanse
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content} keyboardDismissMode="on-drag">
+      {(activeTab === "list" || activeTab === "add") && (
+        <ScrollView style={styles.content} keyboardDismissMode="on-drag">
         {activeTab === "list" && (
           <>
             {/* Group Filter */}
@@ -635,7 +784,219 @@ export default function Strazacy() {
             <View style={{ height: insets.bottom + 20 }} />
           </View>
         )}
-      </ScrollView>
+        </ScrollView>
+      )}
+
+      {activeTab === "contributions" && (
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          keyboardDismissMode="on-drag"
+        >
+          <View style={styles.formContainer}>
+            <View style={styles.filterContainer}>
+              <TouchableOpacity
+                style={[styles.filterButton, contributionsFilter === "all" && styles.filterButtonActive]}
+                onPress={() => setContributionsFilter("all")}
+              >
+                <Text style={[styles.filterButtonText, contributionsFilter === "all" && styles.filterButtonTextActive]}>
+                  Wszyscy ({firefighters.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterButton, contributionsFilter === "unpaid" && styles.filterButtonActive]}
+                onPress={() => setContributionsFilter("unpaid")}
+              >
+                <Text style={[styles.filterButtonText, contributionsFilter === "unpaid" && styles.filterButtonTextActive]}>
+                  Nieopłacone ({firefighters.filter(f => !f.contributions_paid).length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterButton, contributionsFilter === "paid" && styles.filterButtonActive]}
+                onPress={() => setContributionsFilter("paid")}
+              >
+                <Text style={[styles.filterButtonText, contributionsFilter === "paid" && styles.filterButtonTextActive]}>
+                  Opłacone ({firefighters.filter(f => f.contributions_paid).length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <ActivityIndicator size="large" color={colors.headerBackground} style={styles.loader} />
+            ) : getFilteredFirefightersByContribution().length === 0 ? (
+              <Text style={styles.emptyText}>Brak strażaków</Text>
+            ) : (
+              getFilteredFirefightersByContribution().map((firefighter) => (
+                <TouchableOpacity
+                  key={firefighter.id}
+                  style={[
+                    styles.contributionItem,
+                    firefighter.contributions_paid ? styles.contributionItemPaid : styles.contributionItemUnpaid,
+                  ]}
+                  onPress={() => {
+                    setSelectedFirefighterForContribution(firefighter);
+                    setContributionForm({
+                      contributions_paid: firefighter.contributions_paid || false,
+                      contributions_paid_date: firefighter.contributions_paid_date || getTodayLocalDate(),
+                    });
+                    setShowContributionModal(true);
+                  }}
+                >
+                  <View style={styles.contributionContent}>
+                    <Text style={styles.contributionName}>
+                      {firefighter.surname} {firefighter.name}
+                    </Text>
+                    <Text style={styles.contributionStatus}>
+                      {firefighter.contributions_paid ? (
+                        <>
+                          ✓ Opłacone: {formatDate(firefighter.contributions_paid_date) || "Brak daty"}
+                        </>
+                      ) : (
+                        "⚠ Nieopłacone"
+                      )}
+                    </Text>
+                  </View>
+                  <Text style={styles.listItemArrow}>›</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        </ScrollView>
+
+      )}
+
+      {activeTab === "finance" && (
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          keyboardDismissMode="on-drag"
+        >
+          <View style={styles.formContainer}>
+            <Text style={styles.formSection}>💰 System Finansowy</Text>
+
+            {/* Summary Cards */}
+            <View style={styles.summaryContainer}>
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryLabel}>Razem wydatków</Text>
+                <Text style={styles.summaryAmount}>{totalExpenses.toFixed(2)} zł</Text>
+              </View>
+              <View style={[styles.summaryCard, styles.summaryCardBudget]}>
+                <Text style={styles.summaryLabel}>Budżet</Text>
+                <Text style={styles.summaryAmount}>{totalBudget.toFixed(2)} zł</Text>
+              </View>
+            </View>
+
+            {/* Remaining Budget */}
+            <View style={styles.remainingContainer}>
+              <Text style={styles.remainingLabel}>
+                Pozostało: <Text style={styles.remainingAmount}>{(totalBudget - totalExpenses).toFixed(2)} zł</Text>
+              </Text>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.min((totalExpenses / totalBudget) * 100, 100)}%` }
+                  ]}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.formSection}>Dodaj wydatek</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Opis wydatku"
+              placeholderTextColor={colors.textMuted}
+              value={expenseForm.description}
+              onChangeText={(text) => setExpenseForm({ ...expenseForm, description: text })}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Kwota (zł)"
+              placeholderTextColor={colors.textMuted}
+              value={expenseForm.amount}
+              onChangeText={(text) => setExpenseForm({ ...expenseForm, amount: text })}
+              keyboardType="decimal-pad"
+            />
+
+            <SelectField
+              label="Kategoria"
+              value={expenseForm.category}
+              options={[
+                { label: "Paliwo", value: "Paliwo" },
+                { label: "Konserwacja", value: "Konserwacja" },
+                { label: "Części zamienne", value: "Części zamienne" },
+                { label: "Ubezpieczenie", value: "Ubezpieczenie" },
+                { label: "Wyposażenie", value: "Wyposażenie" },
+                { label: "Szkolenia", value: "Szkolenia" },
+                { label: "Inne", value: "Inne" },
+              ]}
+              onChange={(value: string) => setExpenseForm({ ...expenseForm, category: value })}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Data (YYYY-MM-DD)"
+              placeholderTextColor={colors.textMuted}
+              value={expenseForm.date}
+              onChangeText={(text) => setExpenseForm({ ...expenseForm, date: text })}
+            />
+
+            <TouchableOpacity style={styles.saveBtn} onPress={handleAddExpense}>
+              <Text style={styles.saveBtnText}>Dodaj wydatek</Text>
+            </TouchableOpacity>
+
+            {/* Budget Input */}
+            <Text style={styles.formSection}>Ustaw budżet</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Roczny budżet (zł)"
+              placeholderTextColor={colors.textMuted}
+              value={totalBudget.toString()}
+              onChangeText={(text) => setTotalBudget(parseFloat(text) || 0)}
+              keyboardType="decimal-pad"
+            />
+
+            {/* Expenses by Category */}
+            <Text style={styles.formSection}>Wydatki wg kategorii</Text>
+            {Object.keys(expensesByCategory).length > 0 ? (
+              Object.entries(expensesByCategory).map(([category, amount]: [string, any]) => (
+                <View key={category} style={styles.categoryItem}>
+                  <Text style={styles.categoryLabel}>{category}</Text>
+                  <Text style={styles.categoryAmount}>{amount.toFixed(2)} zł</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyValue}>Brak wydatków</Text>
+            )}
+
+            {/* All Expenses */}
+            <Text style={styles.formSection}>Wszystkie wydatki</Text>
+            {expenses.length > 0 ? (
+              expenses.map((expense) => (
+                <View key={expense.id} style={styles.expenseItem}>
+                  <View style={styles.expenseInfo}>
+                    <Text style={styles.expenseDescription}>{expense.description}</Text>
+                    <Text style={styles.expenseDate}>{expense.date} • {expense.category}</Text>
+                  </View>
+                  <View style={styles.expenseActions}>
+                    <Text style={styles.expenseAmount}>{expense.amount.toFixed(2)} zł</Text>
+                    <TouchableOpacity
+                      style={styles.deleteIcon}
+                      onPress={() => handleDeleteExpense(expense.id)}
+                    >
+                      <Text style={styles.deleteIconText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyValue}>Brak wydatków</Text>
+            )}
+          </View>
+        </ScrollView>
+      )}
 
       {/* Details Modal */}
       <Modal visible={showDetailsModal} animationType="slide" onRequestClose={() => setShowDetailsModal(false)}>
@@ -837,6 +1198,68 @@ export default function Strazacy() {
               <Text style={styles.saveBtnText}>Dodaj</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddLanguageModal(false)}>
+              <Text style={styles.cancelBtnText}>Anuluj</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Contribution Modal */}
+      <Modal visible={showContributionModal} animationType="slide" onRequestClose={() => setShowContributionModal(false)}>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowContributionModal(false)}>
+              <Text style={styles.modalCloseButton}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Status składek</Text>
+            <View style={{ width: 30 }} />
+          </View>
+
+          <ScrollView style={styles.modalContent} contentContainerStyle={{ paddingBottom: 100 }} keyboardDismissMode="on-drag">
+            {selectedFirefighterForContribution && (
+              <>
+                <Text style={styles.detailsTitle}>
+                  {selectedFirefighterForContribution.surname} {selectedFirefighterForContribution.name}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => setContributionForm({ ...contributionForm, contributions_paid: !contributionForm.contributions_paid })}
+                >
+                  <View style={[styles.checkboxBox, contributionForm.contributions_paid && styles.checkboxBoxChecked]}>
+                    {contributionForm.contributions_paid && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxLabel}>Składki opłacone</Text>
+                </TouchableOpacity>
+
+                {contributionForm.contributions_paid && (
+                  <>
+                    <Text style={styles.formSection}>Data opłacenia</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Data (YYYY-MM-DD)"
+                      placeholderTextColor={colors.textMuted}
+                      value={contributionForm.contributions_paid_date}
+                      onChangeText={(text) => setContributionForm({ ...contributionForm, contributions_paid_date: text })}
+                    />
+                  </>
+                )}
+
+                <View style={styles.detailsSection}>
+                  <Text style={styles.detailsLabel}>Status:</Text>
+                  <Text style={[styles.detailsValue, contributionForm.contributions_paid ? styles.statusPaid : styles.statusUnpaid]}>
+                    {contributionForm.contributions_paid ? "✓ Opłacone" : "⚠ Nieopłacone"}
+                  </Text>
+                </View>
+              </>
+            )}
+          </ScrollView>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleUpdateContribution}>
+              <Text style={styles.saveBtnText}>Zapisz</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowContributionModal(false)}>
               <Text style={styles.cancelBtnText}>Anuluj</Text>
             </TouchableOpacity>
           </View>

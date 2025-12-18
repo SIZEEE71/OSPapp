@@ -205,6 +205,59 @@
   3. **C też dostaje incoming call** → debounce (7s) zapobiega duplikacji
 - Wszystkie 3 osoby widzą "TRWAJĄCY ALARM" niezależnie od call detection
 
+## [0.10.0] - 18.12.2025
+### System Finansowy 
+#### Strazacy.tsx - 
+- Nowa zakładka "💰 Finanse" w widoku strażaków
+- System zarządzania wydatkami i budżetem
+
+#### Features
+- **Podsumowanie finansowe**: karty pokazujące całkowite wydatki i budżet
+- **Pasek postępu**: wizualizacja procentowego zużycia budżetu
+- **Pozostały budżet**: dynamiczna kalkulacja (`budżet - wydatki`)
+- **Dodawanie wydatków**: formularz z polami:
+  - Opis wydatku
+  - Kwota (zł)
+  - Kategoria (Paliwo, Konserwacja, Części zamienne, Ubezpieczenie, Wyposażenie, Szkolenia, Inne)
+  - Data
+- **Usuwanie wydatków**: przycisk usuwania z potwierdzeniem
+- **Raport wg kategorii**: agregacja wydatków po kategoriach
+- **Lista wszystkich wydatków**: chronologiczny przegląd wszystkich wpisów
+- **Zarządzanie budżetem**: pole do ustawienia rocznego budżetu
+
+## [0.11.0] - 18.12.2025
+### System Składek 
+#### Database
+  - `contributions_paid` (BOOLEAN) - czy opłacone
+  - `contributions_paid_date` (DATE) - data opłacenia
+  - `contributions_updated_at` (TIMESTAMP) - kiedy ostatnio zmieniono
+
+#### Frontend - Strazacy.tsx
+- Nowa zakładka "💳 Składki" w widoku strażaków
+- Filtrowanie strażaków: Wszyscy / Nieopłacone / Opłacone
+- Wyświetlanie statusu składek dla każdego strażaka:
+  - ✓ Opłacone - z datą opłacenia
+  - ⚠ Nieopłacone - jeśli nie zapłacone
+- Modal do aktualizacji statusu składek:
+  - Checkbox "Składki opłacone"
+  - Pole daty opłacenia (widoczne gdy zaznaczone)
+  - Przycisk Save/Anuluj
+
+#### Backend - firefighters-extended.js
+- Dodano `contributions_paid` i `contributions_paid_date` do:
+  - Głównego GET (wszystkich strażaków)
+  - PUT update endpoint
+  - Wszystkie zapytania do bazy
+
+#### Powiadomienia (Notifications)
+- Backend: Nowa sekcja "💳 Nieopłacone składki"
+  - Każdy strażak widzi swoje nieopłacone składki
+  - Informacja: "Prosimy o opłacenie składek"
+  - Żółty pasek po lewej stronie (urgency indicator)
+  - Link do ekranu strażaków (składki)
+- Frontend powiadomienia.tsx:
+  - Nowa sekcja na liście powiadomień
+  - Dynamiczna liczba nieopłaconych strażaków
 
 
 

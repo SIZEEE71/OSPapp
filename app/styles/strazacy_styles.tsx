@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 5,
   },
   filterContainer: {
     flexDirection: "row",
@@ -339,6 +338,169 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     color: colors.text,
     fontWeight: "600",
+  },
+  // Finance styles
+  summaryContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: colors.headerBackground,
+    borderRadius: 12,
+    padding: 15,
+    alignItems: "center",
+    paddingTop: -300,
+  },
+  summaryCardBudget: {
+    backgroundColor: colors.primary,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  summaryAmount: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  remainingContainer: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.headerBackground,
+  },
+  remainingLabel: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 10,
+    fontWeight: "600",
+  },
+  remainingAmount: {
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: colors.headerBackground,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: colors.primary,
+  },
+  categoryItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: colors.headerBackground,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  categoryLabel: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  categoryAmount: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  expenseItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: colors.headerBackground,
+    marginBottom: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  expenseInfo: {
+    flex: 1,
+  },
+  expenseDescription: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  expenseDate: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  expenseActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  expenseAmount: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "700",
+    minWidth: 70,
+    textAlign: "right",
+  },
+  deleteIcon: {
+    padding: 6,
+    backgroundColor: colors.background,
+    borderRadius: 6,
+  },
+  deleteIconText: {
+    color: "red",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  // Contributions styles
+  contributionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 15,
+    marginBottom: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+  },
+  contributionItemPaid: {
+    backgroundColor: colors.headerBackground,
+    borderLeftColor: colors.primary,
+  },
+  contributionItemUnpaid: {
+    backgroundColor: "rgba(255, 193, 7, 0.1)",
+    borderLeftColor: "#FFC107",
+  },
+  contributionContent: {
+    flex: 1,
+  },
+  contributionName: {
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  contributionStatus: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontWeight: "500",
+  },
+  statusPaid: {
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  statusUnpaid: {
+    color: "#FFC107",
+    fontWeight: "700",
   },
 });
 
