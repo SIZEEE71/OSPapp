@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
   enterDisabled: { backgroundColor: colors.disabled },
   enterText: { color: colors.text, fontWeight: "600" },
   simStatus: { fontSize: 12, color: colors.textMuted, marginBottom: 8 },
-  simError: { fontSize: 12, color: '#dc3545', marginBottom: 8 },
-  simSuccess: { fontSize: 12, color: '#28a745', marginBottom: 8, fontWeight: '600' },
+  simError: { fontSize: 12, color: colors.danger, marginBottom: 8 },
+  simSuccess: { fontSize: 12, color: colors.success, marginBottom: 8, fontWeight: '600' },
 });
 
 export default styles;

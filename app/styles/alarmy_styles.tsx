@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     flex: 1,
-    backgroundColor: "#dc3545",
+    backgroundColor: colors.danger,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   crewRemove: {
     fontSize: 18,
-    color: "#dc3545",
+    color: colors.danger,
     paddingHorizontal: 8,
   },
   positionGrid: {

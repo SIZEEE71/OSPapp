@@ -238,8 +238,8 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
     let hydrantMarkers = [];
     let hydrantsVisible = false;
     let hasActiveAlarm = false;
-    let remotezyLat = 49.742863;
-    let remotezyLng = 20.627574;
+    let remizaLat = 49.742863;
+    let remizaLng = 20.627574;
 
 
     // Calculate distance between two coordinates (Haversine formula)
@@ -265,10 +265,9 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
         return;
       }
 
-      // Calculate distances to remotezy for all firefighters
       const firefightersWithDistance = allFirefighters.map(loc => ({
         ...loc,
-        distance: getDistance(loc.lat, loc.lng, remotezyLat, remotezyLng)
+        distance: getDistance(loc.lat, loc.lng, remizaLat, remizaLng)
       }));
 
       // Sort by distance and get top 4
@@ -280,12 +279,16 @@ function generateLeafletHTML(initialLat: number = 49.742863, initialLng: number 
       const itemsContainer = document.getElementById('nearestItems');
       if (!itemsContainer) return;
       
-      itemsContainer.innerHTML = nearest.map(f =>
-        '<div class="nearest-item">' +
+      // Calculate ETA: assuming average speed of 60 km/h for emergency response
+      const ETA_SPEED_KMH = 60;
+      
+      itemsContainer.innerHTML = nearest.map(f => {
+        const etaMinutes = Math.round((f.distance / ETA_SPEED_KMH) * 60);
+        return '<div class="nearest-item">' +
           '<div class="nearest-name">' + (f.firefighterName || '?') + ' ' + (f.firefighterSurname || '') + '</div>' +
-          '<div class="nearest-distance">🚒 ' + f.distance.toFixed(2) + ' km do remotezy</div>' +
-        '</div>'
-      ).join('');
+          '<div class="nearest-distance">🚒 ' + f.distance.toFixed(2) + ' km (ETA: ' + etaMinutes + ' min)</div>' +
+        '</div>';
+      }).join('');
       
       listContainer.style.display = 'block';
     }

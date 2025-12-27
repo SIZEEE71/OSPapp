@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     flex: 1,
-    backgroundColor: "#dc3545",
+    backgroundColor: colors.danger,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",

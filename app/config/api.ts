@@ -30,6 +30,13 @@ export const API_ENDPOINTS = {
     update: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
     delete: (id: number) => `${API_BASE_URL}/station-equipment/${id}`,
   },
+  medicalItems: {
+    list: () => `${API_BASE_URL}/medical-items`,
+    get: (id: number) => `${API_BASE_URL}/medical-items/${id}`,
+    create: `${API_BASE_URL}/medical-items`,
+    update: (id: number) => `${API_BASE_URL}/medical-items/${id}`,
+    delete: (id: number) => `${API_BASE_URL}/medical-items/${id}`,
+  },
   alarms: {
     list: () => `${API_BASE_URL}/alarms`,
     get: (id: number) => `${API_BASE_URL}/alarms/${id}`,

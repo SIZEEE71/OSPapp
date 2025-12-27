@@ -147,6 +147,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
+  submitBtn: {
+    backgroundColor: colors.headerBackground,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  submitBtnText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
   cancelBtn: {
     flex: 1,
     backgroundColor: colors.surfaceBorder,
@@ -173,7 +185,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   deleteBtn: {
-    backgroundColor: "#dc3545",
+    backgroundColor: colors.danger,
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
