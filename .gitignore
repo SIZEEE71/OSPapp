@@ -8,7 +8,6 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-src/
 Aplikacja_mobilna_wspierająca_zarządzanie_jednostką_Ochotniczej_Straży_Pożarnej__OSP_/
 
 # Native
@@ -19,8 +18,6 @@ Aplikacja_mobilna_wspierająca_zarządzanie_jednostką_Ochotniczej_Straży_Poża
 *.p12
 *.key
 *.mobileprovision
-
-.expo/
 
 # Metro
 .metro-health-check*
@@ -45,6 +42,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+.vscode/
 
 # Logs
 logs
