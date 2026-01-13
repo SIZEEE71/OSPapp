@@ -693,7 +693,7 @@ export default function Mapa() {
           locations: locationsWithNames,
           currentFirefighterId: currentId,
           hasActiveAlarm: !!activeAlarm,
-          remotezyLat: 49.742863,  // Coordinates of remotezy (fire station)
+          remotezyLat: 49.742863, 
           remotezyLng: 20.627574,
         });
         

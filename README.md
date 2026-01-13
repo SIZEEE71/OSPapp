@@ -30,7 +30,6 @@ Mobilna aplikacja React Native / Expo do zarządzania operacjami i logistyką je
 #### 1.2 Instalacja MySQL
 1. Pobierz MySQL z https://dev.mysql.com/downloads/installer/
 2. Zainstaluj MySQL Server (zapamiętaj hasło root!)
-3. Zainstaluj MySQL Workbench (opcjonalne, ale pomocne)
 
 #### 1.3 Instalacja Android Studio (dla Android)
 1. Pobierz z https://developer.android.com/studio
@@ -162,6 +161,7 @@ Mobilna aplikacja React Native / Expo do zarządzania operacjami i logistyką je
 Po uruchomieniu aplikacji:
 1. Wybierz strażaka:
    - **Mateusz Pawłowski** 
+   
 W celu automatycznego logowania wymagane dodanie numeru telefonu podczas tworzenia własnego profilu, wtedy system automatyczne loguję na konto.
 
 2. Możesz przetestować wszystkie funkcje aplikacji z przykładowymi danymi
