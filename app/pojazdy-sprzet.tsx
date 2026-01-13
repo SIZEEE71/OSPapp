@@ -1,15 +1,15 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  Modal,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Modal,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
@@ -117,7 +117,7 @@ export default function VehiclesAndEquipment() {
   const fetchMedicalItems = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://qubis.pl:4000/api/medical-items");
+      const res = await fetch(API_ENDPOINTS.medicalItems.list());
       const data = await res.json();
       setMedicalItems(Array.isArray(data) ? data : []);
     } catch (error) {

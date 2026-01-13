@@ -15,11 +15,11 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import ActiveAlarmBanner from "./components/ActiveAlarmBanner";
 import SelectField from "./components/SelectField";
+import { API_ENDPOINTS } from "./config/api";
 import { useAlarmContext } from "./context/AlarmContext";
 import styles from "./styles/alarmy_styles";
 import colors from "./theme";
 
-const API_BASE = "http://qubis.pl:4000/api";
 
 interface Alarm {
   id: number;
@@ -102,7 +102,7 @@ function formatDate(dateString: string): string {
   // Fetch vehicles
   const fetchVehicles = async () => {
     try {
-      const res = await fetch(`${API_BASE}/vehicles`);
+      const res = await fetch(API_ENDPOINTS.vehicles.list());
       const data = await res.json();
       setVehicles(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -113,7 +113,7 @@ function formatDate(dateString: string): string {
   // Fetch firefighters
   const fetchFirefighters = async () => {
     try {
-      const res = await fetch(`${API_BASE}/firefighters-extended`);
+      const res = await fetch(API_ENDPOINTS.firefighters.extendedList);
       const data = await res.json();
       setFirefighters(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -124,7 +124,7 @@ function formatDate(dateString: string): string {
   // Fetch crew for alarm
   const fetchCrew = async (alarmId: number) => {
     try {
-      const res = await fetch(`${API_BASE}/alarms/${alarmId}/crew`);
+      const res = await fetch(API_ENDPOINTS.alarms.crew(alarmId));
       const data = await res.json();
       setCrewMembers(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -141,7 +141,7 @@ function formatDate(dateString: string): string {
 
     try {
       const res = await fetch(
-        `${API_BASE}/alarms/${selectedAlarm.id}/crew`,
+        API_ENDPOINTS.alarms.assignCrew(selectedAlarm.id),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -170,7 +170,7 @@ function formatDate(dateString: string): string {
 
     try {
       const res = await fetch(
-        `${API_BASE}/alarms/${selectedAlarm.id}/crew/${position}`,
+        API_ENDPOINTS.alarms.removeCrew(selectedAlarm.id, position),
         { method: "DELETE" }
       );
 
@@ -188,7 +188,7 @@ function formatDate(dateString: string): string {
   const fetchAlarms = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/alarms`);
+      const res = await fetch(API_ENDPOINTS.alarms.list());
       const text = await res.text();
       const data = JSON.parse(text);
       const sortedData = Array.isArray(data)
@@ -235,7 +235,7 @@ function formatDate(dateString: string): string {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/alarms`, {
+      const res = await fetch(API_ENDPOINTS.alarms.create, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -267,7 +267,7 @@ function formatDate(dateString: string): string {
     if (!selectedAlarm) return;
 
     try {
-      const res = await fetch(`${API_BASE}/alarms/${selectedAlarm.id}`, {
+      const res = await fetch(API_ENDPOINTS.alarms.update(selectedAlarm.id), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -301,7 +301,7 @@ function formatDate(dateString: string): string {
         text: "Usuń",
         onPress: async () => {
           try {
-            const res = await fetch(`${API_BASE}/alarms/${id}`, {
+            const res = await fetch(API_ENDPOINTS.alarms.delete(id), {
               method: "DELETE",
             });
             if (res.ok) {
@@ -385,7 +385,7 @@ function formatDate(dateString: string): string {
               setShowAddModal(true);
             }}
           >
-            <Text style={styles.addButtonText}>➕ Nowy</Text>
+            
           </TouchableOpacity>
         </View>
       </View>
@@ -418,118 +418,6 @@ function formatDate(dateString: string): string {
           <Text style={styles.backBtnText}>← Powrót</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Add Alarm Modal */}
-      <Modal
-        visible={showAddModal}
-        animationType="slide"
-        transparent
-        presentationStyle="overFullScreen"
-        onDismiss={() => setShowAddModal(false)}
-        onRequestClose={() => setShowAddModal(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Text style={styles.modalCloseButton}>✕</Text>
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Nowy alarm</Text>
-              <View style={{ width: 30 }} />
-            </View>
-
-            <ScrollView
-              style={styles.modalContent}
-              contentContainerStyle={{ paddingBottom: 20 }}
-              keyboardDismissMode="on-drag"
-            >
-              <Text style={styles.inputLabel}>Czas alarmu (YYYY-MM-DD HH:MM:SS) *</Text>
-              <TextInput
-                placeholder="2024-12-08 14:30:00"
-                style={styles.input}
-                placeholderTextColor={colors.textMuted}
-                value={formData.alarm_time}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, alarm_time: text })
-                }
-              />
-
-              <Text style={styles.inputLabel}>Czas zakończenia (YYYY-MM-DD HH:MM:SS)</Text>
-              <TextInput
-                placeholder="2024-12-08 16:00:00"
-                style={styles.input}
-                placeholderTextColor={colors.textMuted}
-                value={formatDate(formData.end_time)}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, end_time: text })
-                }
-              />
-
-              <Text style={styles.inputLabel}>Rodzaj alarmu</Text>
-              <TextInput
-                placeholder="np. pożar, wypadek, alarm fałszywy"
-                style={styles.input}
-                placeholderTextColor={colors.textMuted}
-                value={formData.alarm_type}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, alarm_type: text })
-                }
-              />
-
-              <Text style={styles.inputLabel}>Miejsce zdarzenia</Text>
-              <TextInput
-                placeholder="Adres lub opis lokalizacji"
-                style={styles.input}
-                placeholderTextColor={colors.textMuted}
-                value={formData.location}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, location: text })
-                }
-              />
-
-              <Text style={styles.inputLabel}>Opis</Text>
-              <TextInput
-                placeholder="Dodatkowe informacje"
-                style={[styles.input, styles.textArea]}
-                placeholderTextColor={colors.textMuted}
-                multiline
-                value={formData.description}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, description: text })
-                }
-              />
-
-              <SelectField
-                label="Pojazd (opcjonalnie)"
-                value={formData.vehicle_id}
-                options={[
-                  { label: "Brak pojazdu", value: "" },
-                  ...vehicles.map((vehicle: Vehicle) => ({ 
-                    label: `${vehicle.name} (${vehicle.operational_number})`, 
-                    value: vehicle.id.toString() 
-                  })),
-                ]}
-                onChange={(value: string) => setFormData({ ...formData, vehicle_id: value })}
-              />
-            </ScrollView>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.saveBtn}
-                onPress={handleAddAlarm}
-              >
-                <Text style={styles.saveBtnText}>Dodaj</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setShowAddModal(false)}
-              >
-                <Text style={styles.cancelBtnText}>Anuluj</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
 
       {/* Details Modal */}
       <Modal

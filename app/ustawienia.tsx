@@ -57,13 +57,13 @@ export default function Ustawienia() {
       // Ustaw handler dla przychodzących powiadomień
       const subscription = Notifications.addNotificationResponseClearedListener(
         () => {
-          console.log("Notification cleared");
+          // Powiadomienie zostało wyczyszczone
         }
       );
 
       return () => subscription.remove();
     } catch (error) {
-      console.error("Error setting up notifications:", error);
+      // Błąd podczas konfiguracji powiadomień
     }
   };
 

@@ -1,14 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  BackHandler,
-  Modal,
-  RefreshControl,
-  SectionList,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    BackHandler,
+    Modal,
+    RefreshControl,
+    SectionList,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
@@ -112,7 +112,7 @@ export default function Powiadomienia() {
     if (!firefighterId) return;
     try {
       const fighterId = parseInt(String(firefighterId), 10);
-      const response = await fetch(`http://qubis.pl:4000/api/firefighters-extended/${fighterId}`);
+      const response = await fetch(API_ENDPOINTS.firefighters.extendedGet(fighterId));
       if (!response.ok) return;
       const data = await response.json();
       setFirefighter(data);
@@ -125,7 +125,7 @@ export default function Powiadomienia() {
   const fetchCrewResponses = useCallback(async (alarmId: number) => {
     try {
       setCrewLoading(true);
-      const response = await fetch(`http://qubis.pl:4000/api/alarm-response/${alarmId}/stats`);
+      const response = await fetch(API_ENDPOINTS.alarmResponse.stats(alarmId));
       if (!response.ok) {
         throw new Error(`Failed to fetch crew responses: ${response.status}`);
       }

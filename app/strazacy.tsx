@@ -1,17 +1,18 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  Modal,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Modal,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { API_ENDPOINTS } from "./config/api";
 import styles from "./styles/strazacy_styles";
 import colors from "./theme";
 
@@ -29,7 +30,6 @@ type Expense = {
   date: string;
 };
 
-const API_BASE = "http://qubis.pl:4000/api";
 
 // Format date to YYYY-MM-DD (remove time)
 function formatDate(dateString: string): string {
@@ -183,7 +183,7 @@ export default function Strazacy() {
   const fetchFirefighters = async (groupId?: number) => {
     try {
       setLoading(true);
-      let url = `${API_BASE}/firefighters-extended`;
+      let url = API_ENDPOINTS.firefighters.extendedList;
       if (groupId) {
         url += `?group_id=${groupId}`;
       }
@@ -202,10 +202,10 @@ export default function Strazacy() {
   const fetchReferenceData = async () => {
     try {
       const [ranksRes, groupsRes, trainingsRes, languagesRes] = await Promise.all([
-        fetch(`${API_BASE}/ranks`),
-        fetch(`${API_BASE}/groups`),
-        fetch(`${API_BASE}/trainings`),
-        fetch(`${API_BASE}/languages`),
+        fetch(API_ENDPOINTS.ranks.list),
+        fetch(API_ENDPOINTS.groups.list),
+        fetch(API_ENDPOINTS.trainings.list),
+        fetch(API_ENDPOINTS.languages.list),
       ]);
 
       const [ranksData, groupsData, trainingsData, languagesData] = await Promise.all([
@@ -262,7 +262,7 @@ export default function Strazacy() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/firefighters-extended`, {
+      const res = await fetch(API_ENDPOINTS.firefighters.extendedList, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -316,7 +316,7 @@ export default function Strazacy() {
         text: "Usuń",
         onPress: async () => {
           try {
-            const res = await fetch(`${API_BASE}/firefighters-extended/${id}`, {
+            const res = await fetch(API_ENDPOINTS.firefighters.extendedGet(id), {
               method: "DELETE",
             });
             if (res.ok) {
@@ -340,7 +340,7 @@ export default function Strazacy() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/trainings/assign`, {
+      const res = await fetch(API_ENDPOINTS.trainings.assign, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -374,7 +374,7 @@ export default function Strazacy() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/languages/assign`, {
+      const res = await fetch(API_ENDPOINTS.languages.assign, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -461,7 +461,7 @@ export default function Strazacy() {
     if (!selectedFirefighterForContribution) return;
 
     try {
-      const res = await fetch(`${API_BASE}/firefighters-extended/${selectedFirefighterForContribution.id}`, {
+      const res = await fetch(API_ENDPOINTS.firefighters.extendedGet(selectedFirefighterForContribution.id), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

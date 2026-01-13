@@ -100,13 +100,12 @@ const ActiveAlarmBanner: React.FC = () => {
         body: JSON.stringify({ end_time: endTime }),
       });
       if (response.ok) {
-        console.log('Alarm ended with time:', endTime);
         dismissAlarm();
       } else {
-        console.error('Failed to end alarm, response status:', response.status);
+        // Błąd kończenia alarmu
       }
     } catch (error) {
-      console.error('Error ending alarm:', error);
+      // Błąd podczas kończenia alarmu
     } finally {
       setIsEnding(false);
     }

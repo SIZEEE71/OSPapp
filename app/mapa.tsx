@@ -585,9 +585,10 @@ export default function Mapa() {
   const { activeAlarm } = useAlarmContext();
   const [confirmedFirefighterIds, setConfirmedFirefighterIds] = useState<Set<number>>(new Set());
 
-  // Fetch confirmed firefighters when alarm is active
+  // Fetch confirmed firefighters when alarm is active (polling to keep in sync)
   useEffect(() => {
     let mounted = true;
+    let intervalId: number | null = null;
     
     if (!activeAlarm) {
       setConfirmedFirefighterIds(new Set());
@@ -596,8 +597,8 @@ export default function Mapa() {
 
     async function fetchConfirmed() {
       try {
-        if (!activeAlarm) return;
-        const res = await fetch(`http://qubis.pl:4000/api/alarm-response/${activeAlarm.id}/stats`);
+        if (!activeAlarm || !mounted) return;
+        const res = await fetch(API_ENDPOINTS.alarmResponse.stats(activeAlarm.id));
         if (!res.ok) return;
         const data = await res.json();
         const responses = data.responses || [];
@@ -606,16 +607,21 @@ export default function Mapa() {
             .filter((r: any) => r.response_type === 'TAK')
             .map((r: any) => Number(r.firefighter_id))
         );
-        if (mounted) {
-          setConfirmedFirefighterIds(confirmedIds);
-        }
+        setConfirmedFirefighterIds(confirmedIds);
       } catch (error) {
         console.error('Error fetching confirmed firefighters:', error);
       }
     }
 
     fetchConfirmed();
-    return () => { mounted = false; };
+    intervalId = setInterval(fetchConfirmed, POLL_INTERVAL_MS) as unknown as number;
+
+    return () => {
+      mounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, [activeAlarm]);
 
   // Fetch firefighters list once
@@ -623,7 +629,7 @@ export default function Mapa() {
     let mounted = true;
     async function fetchFirefighters() {
       try {
-        const res = await fetch('http://qubis.pl:4000/api/firefighters-extended');
+        const res = await fetch(API_ENDPOINTS.firefighters.extendedList);
         const data = await res.json();
         if (mounted) {
           setFirefighters(Array.isArray(data) ? data : []);
@@ -650,13 +656,13 @@ export default function Mapa() {
         const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
         
         // Filtruj lokalizacje:
-        // - Jeśli jest aktywny alarm: pokaż TYLKO strażaków którzy potwierdzili (TAK)
+        // - Jeśli jest aktywny alarm: pokaż tylko strażaków z odpowiedzią TAK (może być pusty zbiór)
         // - Jeśli nie ma alarmu: pokaż tylko zalogowanego
         let filteredLocations = locations;
-        if (activeAlarm && confirmedFirefighterIds.size > 0) {
+        if (activeAlarm) {
           filteredLocations = locations.filter(loc => confirmedFirefighterIds.has(loc.firefighter_id));
-        } else if (!activeAlarm) {
-          filteredLocations = locations.filter(loc => loc.firefighter_id === currentId);
+        } else {
+          filteredLocations = currentId ? locations.filter(loc => loc.firefighter_id === currentId) : [];
         }
         
         // Ustaw początkową lokalizację na zalogowanego strażaka
@@ -709,17 +715,19 @@ export default function Mapa() {
         pollIntervalRef.current = null;
       }
     };
-  }, [firefighterId, activeAlarm]);
+  }, [firefighterId, activeAlarm, confirmedFirefighterIds]);
 
   // Wyślij dane do mapy gdy WebView jest gotowy
   useEffect(() => {
     if (isWebViewReady && pendingLocationsRef.current && webViewRef.current) {
       const currentId = firefighterId ? parseInt(firefighterId, 10) : null;
       
-      // Filtruj lokalizacje: przy alarmie pokaż wszystkich, bez alarmu tylko siebie
+      // Filtruj lokalizacje: przy alarmie tylko potwierdzeni, bez alarmu tylko zalogowany
       let filteredLocations = pendingLocationsRef.current;
-      if (!activeAlarm) {
-        filteredLocations = filteredLocations.filter(loc => loc.firefighter_id === currentId);
+      if (activeAlarm) {
+        filteredLocations = filteredLocations.filter(loc => confirmedFirefighterIds.has(loc.firefighter_id));
+      } else {
+        filteredLocations = currentId ? filteredLocations.filter(loc => loc.firefighter_id === currentId) : [];
       }
       
       // Połącz lokalizacje z nazwami strażaków
@@ -744,7 +752,7 @@ export default function Mapa() {
       webViewRef.current.postMessage(message);
       pendingLocationsRef.current = null;
     }
-  }, [isWebViewReady, firefighterId, firefighters, activeAlarm]);
+  }, [isWebViewReady, firefighterId, firefighters, activeAlarm, confirmedFirefighterIds]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {

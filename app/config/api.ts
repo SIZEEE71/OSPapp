@@ -1,5 +1,5 @@
 // config/api.ts
-const API_BASE_URL = 'http://qubis.pl:4000/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 export const API_ENDPOINTS = {
   location: {
@@ -9,6 +9,8 @@ export const API_ENDPOINTS = {
   },
   firefighters: {
     list: `${API_BASE_URL}/firefighters`,
+    extendedList: `${API_BASE_URL}/firefighters-extended`,
+    extendedGet: (id: number) => `${API_BASE_URL}/firefighters-extended/${id}`,
     byPhone: (phone: string) => `${API_BASE_URL}/firefighters/phone/${encodeURIComponent(phone)}`,
     equipment: (id: number) => `${API_BASE_URL}/firefighters/${id}/equipment`,
   },
@@ -60,6 +62,20 @@ export const API_ENDPOINTS = {
   },
   notifications: {
     get: (firefighterId: number) => `${API_BASE_URL}/notifications/${firefighterId}`,
+  },
+  ranks: {
+    list: `${API_BASE_URL}/ranks`,
+  },
+  groups: {
+    list: `${API_BASE_URL}/groups`,
+  },
+  trainings: {
+    list: `${API_BASE_URL}/trainings`,
+    assign: `${API_BASE_URL}/trainings/assign`,
+  },
+  languages: {
+    list: `${API_BASE_URL}/languages`,
+    assign: `${API_BASE_URL}/languages/assign`,
   },
   alarmResponse: {
     trigger: `${API_BASE_URL}/alarm-response/trigger`,

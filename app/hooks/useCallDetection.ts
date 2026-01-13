@@ -6,7 +6,7 @@ import {
   Platform,
 } from 'react-native';
 
-const DEFAULT_TARGET_NUMBER = '608101402';
+const DEFAULT_TARGET_NUMBER = '123123123';
 const COOLDOWN_MS = 1000;
 const WAIT_AFTER_CALL_MS = 8000;
 

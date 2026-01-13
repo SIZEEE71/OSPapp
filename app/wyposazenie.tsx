@@ -213,16 +213,13 @@ export default function Wyposazenie() {
 
               if (!res.ok) {
                 const txt = await res.text().catch(() => 'Brak treści');
-                console.warn('Save failed', res.status, txt);
                 return Alert.alert('Błąd zapisu', `Serwer zwrócił ${res.status}: ${txt}`);
               }
 
-              const result = await res.json().catch(() => null);
-              console.log('Save result', result);
+              await res.json().catch(() => null);
               setFirefighterId(ffId);
               Alert.alert('Zapisano', 'Wyposażenie zostało zapisane na serwerze.');
             } catch (err) {
-              console.warn('Save error', err);
               Alert.alert('Błąd', String(err));
             } finally {
               setLoading(false);

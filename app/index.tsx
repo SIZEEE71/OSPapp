@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { API_ENDPOINTS } from "./config/api";
 import { useSimPhoneNumber } from "./hooks/useSimPhoneNumber";
 import styles from "./styles/index_styles";
 import colors from "./theme";
@@ -19,13 +20,12 @@ export default function Index() {
     async function fetchFighters() {
       try {
         setLoading(true);
-        const res = await fetch('http://qubis.pl:4000/api/firefighters-extended');
+        const res = await fetch(API_ENDPOINTS.firefighters.extendedList);
         const data = await res.json();
         if (!mounted) return;
         setFighters(Array.isArray(data) ? data.map((d: any) => ({ id: d.id, name: d.name, surname: d.surname })) : []);
         setError(null);
       } catch (err: any) {
-        console.log('GET API error:', err);
         if (!mounted) return;
         setError(String(err));
       } finally {

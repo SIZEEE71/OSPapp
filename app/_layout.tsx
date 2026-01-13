@@ -27,11 +27,10 @@ function LayoutHeader() {
 }
 
 export default function RootLayout() {
-  // Request notification permissions on mount
+  // Żądanie uprawnień do powiadomień przy starcie
   useEffect(() => {
     (async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      console.log('Notification permissions:', status);
+      await Notifications.requestPermissionsAsync();
     })();
   }, []);
 

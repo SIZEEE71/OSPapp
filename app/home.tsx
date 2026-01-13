@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { BackHandler, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API_ENDPOINTS } from "./config/api";
 import { useAlarmContext } from "./context/AlarmContext";
 import { useLocationTracking } from "./hooks/useLocationTracking";
 import styles from "./styles/home_styles";
@@ -39,7 +40,7 @@ export default function Home() {
         return;
       }
       try {
-        const res = await fetch('http://qubis.pl:4000/api/firefighters-extended');
+        const res = await fetch(API_ENDPOINTS.firefighters.extendedList);
         const list = await res.json();
         if (!mounted) return;
         if (Array.isArray(list)) {

@@ -1,24 +1,22 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  FlatList,
-  Linking,
-  Modal,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    FlatList,
+    Linking,
+    Modal,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_ENDPOINTS } from "./config/api";
 import styles from "./styles/raporty_styles";
 import colors from "./theme";
-
-const API_BASE = "http://qubis.pl:4000/api";
 
 function formatDate(dateString: string): string {
   if (!dateString) return "";
@@ -85,7 +83,7 @@ export default function Raporty() {
   // Fetch alarms for selection
   const fetchAlarms = async () => {
     try {
-      const res = await fetch(`${API_BASE}/alarms`);
+      const res = await fetch(API_ENDPOINTS.alarms.list());
       const text = await res.text();
       const data = JSON.parse(text);
       setAlarms(Array.isArray(data) ? data : []);

@@ -82,8 +82,8 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   // Set up background notification task
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('📬 Notification response received:', response);
+    // Obsługa odpowiedzi na powiadomienie
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       // User tapped on notification - could navigate to alarm confirmation
     });
 
@@ -344,7 +344,7 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
         trigger: null, // Send immediately to ensure it appears
       });
       notificationIdRef.current = id;
-      console.log('✅ Notification scheduled with ID:', id);
+      // Powiadomienie zostało zaplanowane
     } catch (error) {
       console.warn('Alarm notification error', error);
     }
@@ -373,9 +373,7 @@ export const AlarmProvider: React.FC<React.PropsWithChildren> = ({ children }) =
           body: JSON.stringify(payload),
         });
 
-        console.log('📡 Alarm trigger response status:', response.status);
-        
-        if (!response.ok) {
+        // Status odpowiedzi z serwera
           const errorText = await response.text();
           console.error('❌ Alarm trigger error response:', errorText);
           throw new Error(`Failed to create alarm: ${response.status} ${response.statusText}`);

@@ -261,7 +261,6 @@ function withCallDetection(config) {
   });
 
   config = withMainApplication(config, (modConfig) => {
-    // USUNIĘTO toLowerCase() - zachowujemy oryginalną nazwę pakietu
     const packageName = modConfig.android?.package || 'com.osp.app';
     const importName = `${packageName}.calldetector.${PACKAGE_CLASS_NAME}`;
     
@@ -285,10 +284,9 @@ function withCallDetection(config) {
   });
 
   config = withDangerousMod(config, ['android', (modConfig) => {
-    // USUNIĘTO toLowerCase() - generujemy pliki w ścieżce zgodnej z pakietem
     const packageName = modConfig.android?.package || 'com.osp.app';
     const projectRoot = modConfig.modRequest.projectRoot;
-    const packagePath = packageName.split('.'); // Bez toLowerCase()
+    const packagePath = packageName.split('.');
     const javaDir = path.join(
       projectRoot,
       'android',
